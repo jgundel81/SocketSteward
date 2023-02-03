@@ -1,10 +1,17 @@
 // Date and time functions using a PCF8523 RTC connected via I2C and Wire lib
+/*
+*     RTC.ino
+*    File to handle Calling RTC 
+*/
 #include "RTClib.h"
 
 RTC_PCF8523 rtc;
 
 
-
+/*
+* intitialization function for the RTC
+*
+*/
 void initRTC(void)
 {
   if (!rtc.begin()) {
@@ -30,6 +37,9 @@ void initRTC(void)
 
 }
 
+/*
+*   RTC Task gets called every second to query the RTC
+*/
 void RTC_task(void) 
 {
 
@@ -39,10 +49,8 @@ void RTC_task(void)
     isInited = true;
     initRTC();
   }
-
+  //Set the Time from the RTC into Global now Variables
   now = rtc.now();
-
-
 }
 
 
