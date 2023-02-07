@@ -9,6 +9,8 @@ const int chipSelect = 10;
 //Flag so the Button Thread can Start/Stop DataLogging
 bool dataloggingEnabled = false;
 
+#define VREF 3300       //VREF 3.3V
+#define MAX_COUNT 1024  //10 Bit 2^10
 
 /*
 *   SD Card Initialization Function 
@@ -47,6 +49,7 @@ void stopLogging() {
 
 
 
+
 /*
 *   Data logging Task
 * 
@@ -55,7 +58,7 @@ void data_logging(void) {
   static bool isInited = false;
   static uint32_t tick = 0;
 
-  int analogValues[5] = { 0 };
+  uint32_t analogValues[5] = { 0 };
 
 
   //ONLY do this once
@@ -77,11 +80,12 @@ void data_logging(void) {
 
     //Read the 5 ADCs
     // This is where you can do the conversion!!
-    analogValues[0] = analogRead(A0);
-    analogValues[1] = analogRead(A1);
-    analogValues[2] = analogRead(A2);
-    analogValues[3] = analogRead(A3);
-    analogValues[4] = analogRead(A4);
+    analogValues[0] = (analogRead(A1) * VREF) / MAX_COUNT ;
+    analogValues[1] = (analogRead(A2) * VREF) / MAX_COUNT ;
+    analogValues[2] = (analogRead(A3) * VREF) / MAX_COUNT ;
+    analogValues[3] = (analogRead(A4) * VREF) / MAX_COUNT ;
+    analogValues[4] = (analogRead(A5) * VREF) / MAX_COUNT ;
+    
 
     String dataString = "";
     dataString += String(now.month());
