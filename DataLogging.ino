@@ -83,7 +83,7 @@ void data_logging(void) {
   }
 
   //Only Log every 10 seconds
-  if (0 == (tick++ % 5)) 
+  if (0 == (tick++ % 2)) 
   {
 
     Serial.println("Logging");
@@ -96,6 +96,7 @@ void data_logging(void) {
     analogValues[3] = (analogRead(A4) * VREF) / MAX_COUNT ;
     analogValues[4] = (analogRead(A5) * VREF) / MAX_COUNT ;
     resistance[0] = ((VREF * R2) / analogValues[0]) - R2;
+    Serial.println(String(analogValues[0]));
     resistance[1] = ((VREF * R2) / analogValues[1]) - R2;
     resistance[2] = ((VREF * R2) / analogValues[2]) - R2;
     resistance[3] = ((VREF * R2) / analogValues[3]) - R2;

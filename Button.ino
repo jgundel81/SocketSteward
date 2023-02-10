@@ -1,3 +1,12 @@
+/*
+*    Button.ino
+*    File to handle all Button Reading
+*/
+
+
+//Functions to set Logging from Button Presses
+void startLogging();
+void stopLogging();
 
 #define BUTTON_A  9
 #define BUTTON_B  6
@@ -11,7 +20,10 @@ void initButtons(void)
   Serial.begin(9600);
 }
 
-
+/*
+*   Button task
+*   Gets called every 100ms
+*/ 
 void button_task(void)
 {
   static bool isInited = false;
@@ -23,13 +35,6 @@ void button_task(void)
 
   if(!digitalRead(BUTTON_A))
   {
-<<<<<<< Updated upstream
-    Serial.println("Button A Pressed!");
-  }
-  if(!digitalRead(BUTTON_B))
-  {
-    Serial.println("Button B Pressed!");
-=======
     do
     {
       //Stay here while pressing Button
@@ -45,7 +50,6 @@ void button_task(void)
     }while(!digitalRead(BUTTON_B));
 
     stopLogging();
->>>>>>> Stashed changes
   }
   if(!digitalRead(BUTTON_C))
   {
