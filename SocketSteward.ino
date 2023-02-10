@@ -30,12 +30,18 @@ typedef struct _task
 static TaskType *pTask = NULL;
 static uint8_t taskIndex = 0;
 
+<<<<<<< Updated upstream
+=======
+void data_logging(void);
+void OLED_task(void);
+void button_task(void);
+void RTC_task(void);
+>>>>>>> Stashed changes
 
 
 /*********    TASk Table (insert Tasks into Table **********************/
 static TaskType Tasks[] = {
   {INTERVAL_1000ms, 0, RTC_task},
-  {INTERVAL_1000ms, 0, blinkLED},
   {INTERVAL_500ms,0,OLED_task},
   {INTERVAL_10ms,0,button_task},
   
@@ -100,12 +106,3 @@ void loop()
  *   Description: Blinks LED 1000ms
  *   
  */
-void blinkLED(void)
-{
-  static bool ledState = false;
-  digitalWrite(LED_PIN, ledState);
-  if(ledState == true)
-    ledState=false;
-  else
-    ledState = true;    
-}

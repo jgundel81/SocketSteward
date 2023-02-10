@@ -40,11 +40,15 @@ void OLED_task(void) {
         display.display();
 
   display.setCursor(0, 0);
+<<<<<<< Updated upstream
   display.print(now.month(),10);
   display.print("/");
   display.print(now.day(),10);
   display.print("/");
   display.print(now.year(),10);
+=======
+  display.print("Socket Steward Logger"); //Max characters is 21
+>>>>>>> Stashed changes
   display.setCursor(0, 10);
   display.print("(");
   display.print(daysOfTheWeek[now.dayOfTheWeek()]);
@@ -55,11 +59,4 @@ void OLED_task(void) {
   display.print(':');
   display.print(now.second(), 10);
   display.display();
-
-
-
-
-
-
-
 }

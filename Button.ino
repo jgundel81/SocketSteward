@@ -23,11 +23,29 @@ void button_task(void)
 
   if(!digitalRead(BUTTON_A))
   {
+<<<<<<< Updated upstream
     Serial.println("Button A Pressed!");
   }
   if(!digitalRead(BUTTON_B))
   {
     Serial.println("Button B Pressed!");
+=======
+    do
+    {
+      //Stay here while pressing Button
+    }while(!digitalRead(BUTTON_A));
+
+    startLogging();
+  }
+  if(!digitalRead(BUTTON_B))
+  {
+    do
+    {
+      //Stay here while pressing Button
+    }while(!digitalRead(BUTTON_B));
+
+    stopLogging();
+>>>>>>> Stashed changes
   }
   if(!digitalRead(BUTTON_C))
   {
