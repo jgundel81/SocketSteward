@@ -31,7 +31,6 @@ static TaskType *pTask = NULL;
 static uint8_t taskIndex = 0;
 
 void data_logging(void);
-void blinkLED(void);
 void OLED_task(void);
 void button_task(void);
 void RTC_task(void);
@@ -41,7 +40,6 @@ void PowerManagement_task(void);
 /*********    TASk Table (insert Tasks into Table **********************/
 static TaskType Tasks[] = {
   { INTERVAL_1000ms, 0, RTC_task },
-  { INTERVAL_1000ms, 0, blinkLED },
   { INTERVAL_500ms, 0, OLED_task },
   { INTERVAL_10ms, 0, button_task },
   { INTERVAL_1000ms, 0, data_logging },
@@ -58,7 +56,7 @@ TaskType *getTable(void) {
 
 unsigned long voltageLastSample;
 Rms readRms; // create an instance of Rms.
-float VoltRange = 250.00; // The full scale value is set to 5.00 Volts but can be changed when using an
+float VoltRange = 2000.00;
 
 
 /*
@@ -110,20 +108,4 @@ void loop() {
       pTask[taskIndex].lastTick = millis();
     }
   }
-}
-
-
-/*
- *   Function Name: blinkLED 
- * 
- *   Description: Blinks LED 1000ms
- *   
- */
-void blinkLED(void) {
-  static bool ledState = false;
-  digitalWrite(LED_PIN, ledState);
-  if (ledState == true)
-    ledState = false;
-  else
-    ledState = true;
 }

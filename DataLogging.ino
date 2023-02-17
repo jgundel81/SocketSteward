@@ -35,6 +35,7 @@ String msg = "";
 */
 void startLogging() {
   Serial.print("Logging");
+  digitalWrite(LED_PIN,HIGH);
   dataloggingEnabled = true;
 }
 
@@ -44,6 +45,7 @@ void startLogging() {
 */
 void stopLogging() {
   dataloggingEnabled = false;
+  digitalWrite(LED_PIN,LOW);
   Serial.print("Stop Logging");
 }
 
@@ -71,7 +73,7 @@ void data_logging(void) {
   if (false == dataloggingEnabled) {
     return;
   }
-
+  /*
   //Only Log every 10 seconds
   if (0 == (tick++ % 10)) 
   {
@@ -119,4 +121,5 @@ void data_logging(void) {
       Serial.println(dataString);
     }
   }
+  */
 }

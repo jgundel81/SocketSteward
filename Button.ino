@@ -41,7 +41,6 @@ void button_task(void)
     }while(!digitalRead(BUTTON_A));
 
     startLogging();
-    Serial.println("Button A Pressed!");
   }
   if(!digitalRead(BUTTON_B))
   {
@@ -51,7 +50,6 @@ void button_task(void)
     }while(!digitalRead(BUTTON_B));
 
     stopLogging();
-    Serial.println("Button B Pressed!");
   }
   if(!digitalRead(BUTTON_C))
   {
