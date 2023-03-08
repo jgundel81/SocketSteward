@@ -55,7 +55,8 @@ TaskType *getTable(void) {
 
 
 unsigned long voltageLastSample;
-Rms readRms; // create an instance of Rms.
+Rms readRms;
+Rms currentRms; // create an instance of Rms.
 float VoltRange = 2000.00;
 
 
@@ -76,6 +77,8 @@ void setup() {
   }
   readRms.begin(VoltRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
   readRms.start(); //start measuring
+  currentRms.begin(VoltRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
+  currentRms.start(); //start measuring
 
 
 }
@@ -95,6 +98,7 @@ void loop() {
     if (micros() >= voltageLastSample + 1000) /* every 0.2 milli second taking 1 reading */
     {
       readRms.update(analogRead(A1)); // read the ADC.
+      currentRms.update(analogRead(A2));
       voltageLastSample = micros();                /* to reset the time again so that next cycle can start again*/
     }
 

@@ -47,7 +47,7 @@ void OLED_task(void) {
     
   display.clearDisplay();
   display.setCursor(0, 0);
-  display.print("Socket Steward! Logger");
+  display.print("Socket Steward Logger");
   display.setCursor(0, 10);
   display.print("A-Start"); 
   display.setCursor(0, 25);
