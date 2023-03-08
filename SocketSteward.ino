@@ -4,6 +4,9 @@
 #include <SD.h>
 #include <string.h>
 #include <TrueRMS.h>
+#include <Adafruit_AW9523.h>
+
+
 
 #define RMS_WINDOW 50   // rms window of 50 samples, means 3 periods @60Hz
 
@@ -36,7 +39,7 @@ void OLED_task(void);
 void button_task(void);
 void RTC_task(void);
 void PowerManagement_task(void);
-
+void LedMonitorTask(void);
 
 /*********    TASk Table (insert Tasks into Table **********************/
 static TaskType Tasks[] = {
@@ -46,6 +49,7 @@ static TaskType Tasks[] = {
   { INTERVAL_10ms, 0, button_task },
   { INTERVAL_1000ms, 0, data_logging },
   { INTERVAL_500ms, 0, PowerManagement_task },
+  { INTERVAL_100ms, 0, LedMonitorTask}
 };
 
 const uint8_t numOfTasks = sizeof(Tasks) / sizeof(*Tasks);
