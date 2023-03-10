@@ -45,7 +45,6 @@ Power acPower;  // create an instance of Power
 
 
 void setup() {  // run once:
-	Serial.begin(115200);
   // configure for automatic base-line restoration and continuous scan mode:
 	acPower.begin(acVoltRange, acCurrRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
   
