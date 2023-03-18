@@ -3,6 +3,15 @@
 *    File to handle all Button Reading
 */
 
+typedef struct
+{
+  bool buttonPressed;
+  uint8_t button;
+} buttonStatus_t;
+
+//Button Structure
+buttonStatus_t gButtonStatus;
+
 
 //Functions to set Logging from Button Presses
 void startLogging();
@@ -39,9 +48,11 @@ void button_task(void)
     {
       //Stay here while pressing Button
     }while(!digitalRead(BUTTON_A));
+    gButtonStatus.button = BUTTON_A;
+    gButtonStatus.buttonPressed = true;
+    Serial.println("ButtonA");
 
-    startLogging();
-    Serial.println("Button A Pressed!");
+
   }
   if(!digitalRead(BUTTON_B))
   {
@@ -49,12 +60,20 @@ void button_task(void)
     {
       //Stay here while pressing Button
     }while(!digitalRead(BUTTON_B));
-
-    stopLogging();
-    Serial.println("Button B Pressed!");
+    gButtonStatus.button = BUTTON_B;
+    gButtonStatus.buttonPressed = true;
+    Serial.println("ButtonB");
+    
   }
   if(!digitalRead(BUTTON_C))
   {
-    Serial.println("Button C Pressed!");
+    do
+    {
+      //Stay here while pressing Button
+    }while(!digitalRead(BUTTON_C));
+    gButtonStatus.button = BUTTON_C;
+    gButtonStatus.buttonPressed = true;
+    Serial.println("ButtonC");
+    
   }
 }
