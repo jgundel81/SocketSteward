@@ -1,35 +1,34 @@
-
 /*
-
-int adcVal;
-int cnt = 0;
-// input scaling circuit in front of the ADC.
+ *. Monitor.ino
+ */
 
 
- *
- * File: Energy.ino
- * Purpose: TrueRMS library example project
- * Version: 1.0.1
- * Modified: 18-05-2020
- * Date: 10-10-2019
- * URL: https://github.com/MartinStokroos/TrueRMS
- * License: MIT License
- *
- *
- * This is an example of a complete AC-power meter application, measuring energy, apparent power, real power, power factor,
- * rms voltage and current. Use external electronic circuitry to scale down the AC-voltage or current to be 
- * compliant with the ADC input voltage range of 0-5V. To measure line voltages, use a differential amplifier+level 
- * shifter circuit with resistive voltage dividers at the input. Use for example a current sensor with a Hall sensor
- * based on the zero flux method. ALWAYS USE AN ISOLATION TRANSFORMER FOR SAFETY!
- * 
- * The RMS_WINDOW defines the number of samples used to calculate the RMS-value. The length of the RMS_WINDOW must 
- * be specified as a whole number and must fit at least one cycle of the base frequency of the input signal.
- * If RMS_WINDOW + sample-rate does not match with the fundamental frequency of the input signal(s), slow fluctuations 
- * in the rms values and power readings will occure.
- *
-*/
+//Structure to hold all Sensor information
+//This will most likely need to be modified.
+typedef struct
+{
+  int ambientTemp;
+  int LRecepticalTemp;
+  int RRecepticalTemp;
+  int plugTemp;
+  float voltage;
+  float current;
+  // Add the rest of the sensors to monitor here.
+} system_sensors_t;
 
-#include <TrueRMS.h>
+system_sensors_t gSensors;
+
+
+void sensormonitor_task(void)
+{
+  readRms.publish();
+  gSensors.voltage = readRms.rmsVal;
+
+  //Add Temperature Sampling/ Calculations and Storing
+
+  //Sample the other Sensors
+}
+
 
 #define LPERIOD 2000    // loop period time in us. In this case 2.0ms
 //#define RMS_WINDOW 50   // rms window of 50 samples, means 6 periods @60Hz
@@ -44,7 +43,7 @@ float acCurrRange = 3.3; // peak-to-peak current scaled down to 0-5V is 5A (=5/2
 Power acPower;  // create an instance of Power
 
 
-void setup() {  // run once:
+void setup2() {  // run once:
   // configure for automatic base-line restoration and continuous scan mode:
 	acPower.begin(acVoltRange, acCurrRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
   
@@ -55,7 +54,7 @@ void setup() {  // run once:
 
 
 
-void loop() {
+void loop2() {
 	// run repeatedly:
 	acVolt = analogRead(A1); // read the ADC, channel for Vin
 	acCurr = analogRead(A2); // read the ADC, channel for Iin
@@ -82,7 +81,7 @@ void loop() {
 
 
 
-/*
+
 void PowerManagement_task(void) {
   readRms.publish();
   Serial.println("Result:");
@@ -112,4 +111,3 @@ dataString += String(currentRms.dcBias);
       dataFile.close();
     }
 }
-*/
