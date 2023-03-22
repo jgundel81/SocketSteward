@@ -11,6 +11,7 @@ typedef enum
   thermal_runaway,
   low_voltage,
   ground_fault,
+  arc_fault,
   unknown_trip,
   NUM_OF_ERRORS     //This needs to be last 
 } error_conditions_t;
@@ -52,6 +53,7 @@ error_messages_t error_message_table[NUM_OF_ERRORS] = {
   {" Thermal Runaway     ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//thermal_runaway,
   {" Low Voltage         ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//low_voltage,
   {" Ground Fault        ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//ground_fault,
+  {" Arc Fault           ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//arc_fault,
   {" Unknown Trip        ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//unknown_trip,
 };
 
@@ -60,6 +62,7 @@ ledErrorBlinkPattern_t error_led_table[NUM_OF_ERRORS] = {
   {{1000,200},{3000,500},{200,800}},//thermal_runaway,
   {{0,0},{0,0},{0,0}},//low_voltage,
   {{0,0},{0,0},{0,0}},//ground_fault,
+  {{0,0},{0,0},{0,0}},//arc_fault,
   {{0,0},{0,0},{0,0}},//unknown_trip,
 };
 
