@@ -70,7 +70,11 @@ TaskType *getTable(void) {
 unsigned long voltageLastSample;
 Rms readRms; // create an instance of Rms.
 Rms currentRms;
+Power acPower;  // create an instance of Power
 float VoltRange = 250.00; // The full scale value is set to 5.00 Volts but can be changed when using an
+float acCurrRange = 3.3; // peak-to-peak current scaled down to 0-5V is 5A (=5/2*sqrt(2) = 1.77Arms max).
+#define LPERIOD 2000    // loop period time in us. In this case 2.0ms
+unsigned long nextLoop;
 
 
 /*
@@ -99,6 +103,12 @@ void setup()
   readRms.start(); //start measuring
   currentRms.begin(VoltRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
   currentRms.start(); //start measuring
+
+  acPower.begin(VoltRange, acCurrRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
+  
+  acPower.start(); //start measuring
+  
+  nextLoop = micros() + LPERIOD; // Set the loop timer variable for the next loop interval.
 
 
 }
