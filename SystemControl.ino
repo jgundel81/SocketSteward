@@ -16,12 +16,15 @@ void control_task(void)
   no_error,
   thermal_runaway,
   low_voltage,
+  arc_fault,
   ground_fault,
   unknown_trip,
   */
 
   //Add some logic here to set an error.
   gCurrentError = no_error;
+  
+
 
 
 
