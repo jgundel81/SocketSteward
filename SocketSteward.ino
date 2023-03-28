@@ -9,6 +9,7 @@
 #include <string.h>
 #include <TrueRMS.h>
 #include <Adafruit_AW9523.h>
+#include <math.h>
 Adafruit_AW9523 aw;
 
 #define RMS_WINDOW 50   // rms window of 50 samples, means 3 periods @60Hz
@@ -17,6 +18,11 @@ DateTime now;
 char daysOfTheWeek[7][12] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 
 #define LED_PIN 13
+
+//Flag so the Button Thread can Start/Stop DataLogging
+bool dataloggingEnabled = false;
+void startLogging();
+void stopLogging();
 
 /********************* Scheduling Related Variables *************************/
 #define INTERVAL_ALWAYS 0
@@ -55,6 +61,8 @@ static TaskType Tasks[] = {
   { INTERVAL_100ms, 0, control_task },
   { INTERVAL_500ms, 0, sensormonitor_task },
   { INTERVAL_100ms, 0, blinkpattern_task},
+  { INTERVAL_500ms, 0, data_logging},
+  
 };
 
 const uint8_t numOfTasks = sizeof(Tasks) / sizeof(*Tasks);

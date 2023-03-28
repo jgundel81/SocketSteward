@@ -20,6 +20,7 @@ displayState_t gDisplayState = dashboard;
 
 void displayDashboard(error_conditions_t error);
 void displayDetails(error_conditions_t error);
+void displayOptions(error_conditions_t error);
 
 /*
 *   OLED init function called once
@@ -70,7 +71,7 @@ void display_task(void) {
         }
         else if(BUTTON_B == gButtonStatus.button)
         {
-
+            gDisplayState = options;
         } 
         else if(BUTTON_C == gButtonStatus.button)
         {
@@ -80,6 +81,7 @@ void display_task(void) {
       }
       break;
     case options:
+      displayOptions(gCurrentError);
       if(gButtonStatus.buttonPressed)
       {
         gButtonStatus.buttonPressed = false;
@@ -89,11 +91,14 @@ void display_task(void) {
         }
         else if(BUTTON_B == gButtonStatus.button)
         {
-
+          if(true == dataloggingEnabled)
+            stopLogging();
+          else
+            startLogging();
         } 
         else if(BUTTON_C == gButtonStatus.button)
         {
-
+          gDisplayState = dashboard;
         } 
       }
       break;
@@ -108,7 +113,7 @@ void display_task(void) {
         }
         else if(BUTTON_B == gButtonStatus.button)
         {
-
+         
         } 
         else if(BUTTON_C == gButtonStatus.button)
         {
@@ -118,6 +123,27 @@ void display_task(void) {
       break;
     
   }
+}
+
+void displayOptions(error_conditions_t error)
+{
+
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.println(" Socket Steward 0.01 ");
+  display.println("                     ");
+  if(dataloggingEnabled)
+    display.println("Currently Logging!  ");
+  else
+    display.println("Currently Not Logging");
+  display.println("                     ");
+  display.println("< Turn On/Off Logging");
+  display.println("                     ");
+  display.println("< Exit               ");
+  display.println("                     ");
+  
+  display.display();
+  
 }
 
 void displayDashboard(error_conditions_t error)
@@ -145,11 +171,37 @@ void displayDetails(error_conditions_t error)
   display.clearDisplay();
   display.setCursor(0, 0);
   display.println(" Socket Steward 0.01 ");
+  if(no_error != error)
+  {
   display.println("                     ");
   display.println(error_message_table[error].detailedErrorMsg);
   display.println("                     ");
   display.println("< exit               ");
   display.println("                     ");
+  }
+  else
+  {
+  
+    display.print("Ambient:");
+    display.print(gSensors.ambientTemp);
+    display.print("C Plug:");
+    display.print(gSensors.plugTemp);
+    display.println("C ");
+    display.print("LeftReceptical:");
+    display.print(gSensors.LRecepticalTemp);
+    display.println("C ");
+    display.print("RightReceptical:");
+    display.print(gSensors.RRecepticalTemp);
+    display.println("C ");
+    
+    display.print("Voltage :");
+    display.println(gSensors.voltage);
+    display.print("Current :");
+    display.println(gSensors.current);
+    display.print("< exit               ");
+    display.println("                     ");
+
+  }
   
   display.display();
   
