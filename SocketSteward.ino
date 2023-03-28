@@ -45,6 +45,7 @@ void RTC_task(void);
 void control_task(void);
 void blinkpattern_task(void);
 void PowerManagement_task(void);
+void GetValues(void);
 
 
 /*********    TASk Table (insert Tasks into Table **********************/
@@ -53,6 +54,7 @@ static TaskType Tasks[] = {
   { INTERVAL_1000ms, 0, blinkLED },
   { INTERVAL_500ms, 0, display_task },
   { INTERVAL_10ms, 0, button_task },
+  { INTERVAL_10ms, 0, GetValues },
   { INTERVAL_100ms, 0, control_task },
   { INTERVAL_500ms, 0, sensormonitor_task },
   { INTERVAL_500ms, 0, PowerManagement_task },
@@ -67,14 +69,9 @@ TaskType *getTable(void) {
 
 
 //Used for RMS Calculations
-unsigned long voltageLastSample;
-Rms readRms; // create an instance of Rms.
-Rms currentRms;
 Power acPower;  // create an instance of Power
-float VoltRange = 250.00; // The full scale value is set to 5.00 Volts but can be changed when using an
-float acCurrRange = 3.3; // peak-to-peak current scaled down to 0-5V is 5A (=5/2*sqrt(2) = 1.77Arms max).
-#define LPERIOD 2000    // loop period time in us. In this case 2.0ms
-unsigned long nextLoop;
+float VoltRange = 2000.00; // The full scale value is set to 5.00 Volts but can be changed when using an
+float acCurrRange = 130; // peak-to-peak current scaled down to 0-5V is 5A (=5/2*sqrt(2) = 1.77Arms max).
 
 
 /*
@@ -99,18 +96,8 @@ void setup()
     while (1)
       ;
   }
-  readRms.begin(VoltRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
-  readRms.start(); //start measuring
-  currentRms.begin(VoltRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
-  currentRms.start(); //start measuring
-
   acPower.begin(VoltRange, acCurrRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
-  
   acPower.start(); //start measuring
-  
-  nextLoop = micros() + LPERIOD; // Set the loop timer variable for the next loop interval.
-
-
 }
 
 
@@ -122,17 +109,6 @@ void setup()
  */
 void loop() {
   for (taskIndex = 0; taskIndex < numOfTasks; taskIndex++) {
-  
-   
-  // RMS Measurement must be handled in every iteration so it was put here.
-    if (micros() >= voltageLastSample + 1000) /* every 0.2 milli second taking 1 reading */
-    {
-      readRms.update(analogRead(A1)); // read the ADC.
-      currentRms.update(analogRead(A2));
-      voltageLastSample = micros();                /* to reset the time again so that next cycle can start again*/
-    }
-
-
     //Run primitive Scheduler
     if (0 == pTask[taskIndex].interval) {
       //run every loop

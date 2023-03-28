@@ -20,8 +20,7 @@ system_sensors_t gSensors;
 const int chipSelect = 10;
 
 void sensormonitor_task(void) {
-  readRms.publish();
-  gSensors.voltage = readRms.rmsVal;
+  Serial.println(" ");
 
   //Add Temperature Sampling/ Calculations and Storing
 
@@ -42,6 +41,12 @@ void initSDCard(void) {
 int acVolt;
 int acCurr;
 
+void GetValues(void)  {
+  acVolt = analogRead(A1);  // read the ADC, channel for Vin
+  acCurr = analogRead(A2);  // read the ADC, channel for Iin
+  acPower.update(acVolt, acCurr);
+}
+
 
 void PowerManagement_task(void) {
   // run repeatedly:
@@ -53,9 +58,7 @@ void PowerManagement_task(void) {
     initSDCard();
   }
 
-  acVolt = analogRead(A1);  // read the ADC, channel for Vin
-  acCurr = analogRead(A2);  // read the ADC, channel for Iin
-  acPower.update(acVolt, acCurr);
+
   //RmsReading.update(adcVal-512);  // without automatic baseline restoration (BLR_OFF),
   // substract a fixed DC offset in ADC-units here.
   acPower.publish();
@@ -66,10 +69,6 @@ void PowerManagement_task(void) {
   Serial.print(acPower.realPwr, 1);  // [P]
   Serial.print(", ");
   Serial.println(acPower.energy / 3600, 2);  // [Wh]
-
-  while (nextLoop > micros())
-    ;                   // wait until the end of the time interval
-  nextLoop += LPERIOD;  // set next loop time to current time + LOOP_PERIOD
 
   String dataString = "";
   dataString += String(now.month());
