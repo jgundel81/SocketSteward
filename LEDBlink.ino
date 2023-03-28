@@ -65,6 +65,12 @@ void blinkpattern_task() {
         aw.digitalWrite(RED_LED_PIN, HIGH);
     }
   }
+  else
+  {
+    aw.digitalWrite(RED_LED_PIN, HIGH);
+    aw.digitalWrite(AMBER_LED_PIN, HIGH);
+    aw.digitalWrite(GREEN_LED_PIN, HIGH);
+  }
 
   //Amber LED 
   if(!((error_led_table[gCurrentError].amber.onTime == 0)&&(error_led_table[gCurrentError].amber.offTime == 0)))
@@ -91,6 +97,12 @@ void blinkpattern_task() {
       else
         aw.digitalWrite(AMBER_LED_PIN, HIGH);
     }
+  }
+  else
+  {
+    aw.digitalWrite(RED_LED_PIN, HIGH);
+    aw.digitalWrite(AMBER_LED_PIN, HIGH);
+    aw.digitalWrite(GREEN_LED_PIN, HIGH);
   }
 
     //Green LED 
@@ -120,6 +132,12 @@ void blinkpattern_task() {
       else
         aw.digitalWrite(GREEN_LED_PIN, HIGH);
     }
+  }
+  else
+  {
+    aw.digitalWrite(RED_LED_PIN, HIGH);
+    aw.digitalWrite(AMBER_LED_PIN, HIGH);
+    aw.digitalWrite(GREEN_LED_PIN, HIGH);
   }
 
 

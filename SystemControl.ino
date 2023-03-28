@@ -22,8 +22,14 @@ void control_task(void)
   */
 
   //Add some logic here to set an error.
-  gCurrentError = no_error;
-  
+  if(gSensors.plugTemp > 27)
+  {
+    gCurrentError = thermal_runaway;
+  }
+  else
+  {
+    gCurrentError = no_error;
+  }
 
 
 
