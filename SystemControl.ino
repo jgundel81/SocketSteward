@@ -22,7 +22,14 @@ void control_task(void)
   */
 
   //Add some logic here to set an error.
+  if(low_voltage < 25){
+
+    gCurrentError = low_volgate
+    
+  }
+  else if
   gCurrentError = no_error;
+
   
 
 
