@@ -9,6 +9,8 @@ double tempInCelcius(int adcVal);
 #define PLUGTEMP_PIN A3
 #define VOLTAGE_PIN A1
 #define CURRENT_PIN A2
+int acVolt;
+int acCurr;
 
 //Structure to hold all Sensor information
 //This will most likely need to be modified.
@@ -25,11 +27,17 @@ typedef struct
 
 system_sensors_t gSensors;
 
+void GetValues(void)  {
+  acVolt = analogRead(A1);  // read the ADC, channel for Vin
+  acCurr = analogRead(A2);  // read the ADC, channel for Iin
+  acPower.update(acVolt, acCurr);
+}
 
 void sensormonitor_task(void)
 {
-  readRms.publish();
-  gSensors.voltage = readRms.rmsVal;
+  acPower.publish();
+  gSensors.voltage = acPower.rmsVal1;
+  gSensors.current = acPower.rmsVal2;
 
   gSensors.plugTemp = tempInCelcius(analogRead(PLUGTEMP_PIN));
   gSensors.LRecepticalTemp = tempInCelcius(analogRead(LRECEPTICALTEMP_PIN));

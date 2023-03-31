@@ -195,9 +195,11 @@ void displayDetails(error_conditions_t error)
     display.println("C ");
     
     display.print("Voltage :");
-    display.println(gSensors.voltage);
+    display.print(gSensors.voltage);
+    display.println(" V ");
     display.print("Current :");
-    display.println(gSensors.current);
+    display.print(gSensors.current);
+    display.println(" A ");
     display.print("< exit               ");
     display.println("                     ");
 

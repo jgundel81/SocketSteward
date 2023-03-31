@@ -102,11 +102,12 @@ void data_logging(void) {
     dataString += String(gSensors.plugTemp);
     dataString += ",";
     dataString += String(gSensors.voltage);
-    dataString += ",";
+    dataString += " V,";
     dataString += String(gSensors.current);
+    dataString += " A";
     
 
-    File dataFile = SD.open("datalog.txt", FILE_WRITE);
+    File dataFile = SD.open("datalog.csv", FILE_WRITE);
     // if the file is available, write to it:
     if (dataFile) {
       dataFile.println(dataString);
