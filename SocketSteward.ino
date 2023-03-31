@@ -63,7 +63,7 @@ static TaskType Tasks[] = {
   { INTERVAL_100ms, 0, control_task },
   { INTERVAL_500ms, 0, sensormonitor_task },
   { INTERVAL_100ms, 0, blinkpattern_task},
-  { INTERVAL_500ms, 0, data_logging},
+  { INTERVAL_10ms, 0, data_logging},
   
 };
 
