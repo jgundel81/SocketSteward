@@ -177,7 +177,8 @@ bool system_log(String msg)
       Serial.println(dataString);
       return true;
     }
-    Serial.println("Failed to write Log");
+    Serial.print("Failed to write Log: ");
+    Serial.println(msg);
     return false;
 }
 
