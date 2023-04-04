@@ -9,6 +9,8 @@ double tempInCelcius(int adcVal);
 #define PLUGTEMP_PIN A3
 #define VOLTAGE_PIN A1
 #define CURRENT_PIN A2
+#define AMBIENTTEMP_PIN A0
+
 int acVolt;
 int acCurr;
 
@@ -39,6 +41,7 @@ void sensormonitor_task(void)
   gSensors.voltage = acPower.rmsVal1;
   gSensors.current = acPower.rmsVal2;
 
+  gSensors.ambientTemp = tempInCelcius(analogRead(AMBIENTTEMP_PIN));
   gSensors.plugTemp = tempInCelcius(analogRead(PLUGTEMP_PIN));
   gSensors.LRecepticalTemp = tempInCelcius(analogRead(LRECEPTICALTEMP_PIN));
   gSensors.RRecepticalTemp = tempInCelcius(analogRead(RRECEPTICALTEMP_PIN));

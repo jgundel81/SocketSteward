@@ -31,7 +31,7 @@ String msg = "";
 *   Function to set debug flag
 */
 void startLogging() {
-  Serial.print("Logging");
+  Serial.println("Start Logging");
   dataloggingEnabled = true;
 }
 
@@ -41,7 +41,7 @@ void startLogging() {
 */
 void stopLogging() {
   dataloggingEnabled = false;
-  Serial.print("Stop Logging");
+  Serial.println("Stop Logging");
 }
 
 
@@ -73,47 +73,62 @@ void data_logging(void) {
   if (0 == (tick++ % 10)) 
   {
 
-    Serial.println("Logging");
+    //Serial.println("Logging");
 
     //Read the 5 ADCs
     // This is where you can do the conversion!!
      
-
-    String dataString = "";
-    dataString += String(now.month());
-    dataString += "/";
-    dataString += String(now.day());
-    dataString += "/";
-    dataString += String(now.year());
-    dataString += " ";
-    dataString += String(now.hour());
-    dataString += ":";
-    dataString += String(now.minute());
-    dataString += ":";
-    dataString += String(now.second());
-    dataString += ",";
-
-    dataString += String(gSensors.ambientTemp);
-    dataString += ",";
-    dataString += String(gSensors.LRecepticalTemp);
-    dataString += ",";
-    dataString += String(gSensors.RRecepticalTemp);
-    dataString += ",";
-    dataString += String(gSensors.plugTemp);
-    dataString += ",";
-    dataString += String(gSensors.voltage);
-    dataString += " V,";
-    dataString += String(gSensors.current);
-    dataString += " A";
+    String fileName = "";
+    fileName += String(now.month());
+    fileName += "-";
+    fileName += String(now.day());
+    fileName += "-";
+    fileName += String(now.year());
+    fileName += ".CSV";
     
-
-    File dataFile = SD.open("datalog.csv", FILE_WRITE);
+   
+    File dataFile = SD.open(fileName, FILE_WRITE);  
     // if the file is available, write to it:
     if (dataFile) {
+      String dataString = "";
+      dataString += String(now.month());
+      dataString += "/";
+      dataString += String(now.day());
+      dataString += "/";
+      dataString += String(now.year());
+      dataString += ",";
+      dataString += String(now.hour());
+      dataString += ":";
+      dataString += String(now.minute());
+      dataString += ":";
+      dataString += String(now.second());
+      dataString += ",";
+      dataString += String(gSensors.ambientTemp);  //now build the rest of the timestamped entry
+      dataString += ",";
+      dataString += String(gSensors.LRecepticalTemp);
+      dataString += ",";
+      dataString += String(gSensors.RRecepticalTemp);
+      dataString += ",";
+      dataString += String(gSensors.plugTemp);
+      dataString += ",";
+      dataString += String(gSensors.voltage);
+      dataString += " V,";
+      dataString += String(gSensors.current);
+      dataString += " A";
       dataFile.println(dataString);
       dataFile.close();
       // print to the serial port too:
       Serial.println(dataString);
     }
+    else
+    {
+      Serial.print(fileName);
+      Serial.println(" could not be opened");
+      dataloggingEnabled = false;
+      Serial.println("Datalogging has been disabled. Insert SD Card and reboot");
+    }
+
+    
+    
   }
 }

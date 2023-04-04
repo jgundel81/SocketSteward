@@ -10,6 +10,7 @@
 #include <TrueRMS.h>
 #include <Adafruit_AW9523.h>
 #include <math.h>
+#include <wiring_analog.h>
 Adafruit_AW9523 aw;
 
 #define RMS_WINDOW 50   // rms window of 50 samples, means 3 periods @60Hz
@@ -20,6 +21,7 @@ char daysOfTheWeek[7][12] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thurs
 #define LED_PIN 13
 
 //Flag so the Button Thread can Start/Stop DataLogging
+
 bool dataloggingEnabled = false;
 void startLogging();
 void stopLogging();
@@ -30,6 +32,7 @@ void stopLogging();
 #define INTERVAL_100ms 100
 #define INTERVAL_500ms 500
 #define INTERVAL_1000ms 1000
+#define INTERVAL_10S 10000
 
 typedef struct _task {
   uint16_t interval;
@@ -63,7 +66,7 @@ static TaskType Tasks[] = {
   { INTERVAL_100ms, 0, control_task },
   { INTERVAL_500ms, 0, sensormonitor_task },
   { INTERVAL_100ms, 0, blinkpattern_task},
-  { INTERVAL_10ms, 0, data_logging},
+  { INTERVAL_1000ms, 0, data_logging},
   
 };
 
@@ -89,11 +92,16 @@ void setup()
 {
    pinMode(LED_PIN, OUTPUT);
    Serial.begin(9600);
+   delay(5000);
 
   //Initialize GPIO Expander.
    if (! aw.begin(0x58))
    {
     Serial.println("AW9523 not found? Check wiring!");
+   }
+   else
+   {
+     Serial.println("AW9523 found, thank you");
    }
   pTask = getTable();
   if (NULL == pTask) {
@@ -103,6 +111,7 @@ void setup()
   }
   acPower.begin(VoltRange, acCurrRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
   acPower.start(); //start measuring
+  Serial.println("called acPower.begin() during setup()");
 
 
 }

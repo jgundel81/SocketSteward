@@ -8,7 +8,6 @@
 
 Adafruit_SH1107 display = Adafruit_SH1107(64, 128, &Wire);
 
-
 typedef enum
 {
   dashboard,
@@ -60,14 +59,14 @@ void display_task(void) {
 
   switch(gDisplayState)
   {
-    case dashboard:
+    case dashboard:  // labeled HOME
       displayDashboard(gCurrentError);
       if(true == gButtonStatus.buttonPressed)
       {
         gButtonStatus.buttonPressed = false;
         if(BUTTON_A == gButtonStatus.button)
         {
-
+         
         }
         else if(BUTTON_B == gButtonStatus.button)
         {
@@ -80,14 +79,14 @@ void display_task(void) {
         } 
       }
       break;
-    case options:
+    case options:  
       displayOptions(gCurrentError);
       if(gButtonStatus.buttonPressed)
       {
         gButtonStatus.buttonPressed = false;
         if(BUTTON_A == gButtonStatus.button)
         {
-
+          gDisplayState = dashboard;
         }
         else if(BUTTON_B == gButtonStatus.button)
         {
@@ -98,7 +97,10 @@ void display_task(void) {
         } 
         else if(BUTTON_C == gButtonStatus.button)
         {
-          gDisplayState = dashboard;
+          if(dataloggingEnabled)
+            gDisplayState = details;
+          else
+            gDisplayState = dashboard;
         } 
       }
       break;
@@ -109,7 +111,7 @@ void display_task(void) {
         gButtonStatus.buttonPressed = false;
         if(BUTTON_A == gButtonStatus.button)
         {
-
+        gDisplayState = dashboard;  // secret path to home  page
         }
         else if(BUTTON_B == gButtonStatus.button)
         {
@@ -117,7 +119,7 @@ void display_task(void) {
         } 
         else if(BUTTON_C == gButtonStatus.button)
         {
-          gDisplayState = dashboard;
+          gDisplayState = options;
         } 
       }
       break;
@@ -130,18 +132,25 @@ void displayOptions(error_conditions_t error)
 
   display.clearDisplay();
   display.setCursor(0, 0);
-  display.println(" Socket Steward 0.01 ");
+  display.println("Socket Steward 0.4.3");  // use top row for future "more options button "
   display.println("                     ");
-  if(dataloggingEnabled)
-    display.println("Currently Logging!  ");
-  else
-    display.println("Currently Not Logging");
-  display.println("                     ");
-  display.println("< Turn On/Off Logging");
-  display.println("                     ");
-  display.println("< Exit               ");
-  display.println("                     ");
-  
+  display.setCursor(0, 15);
+    if(dataloggingEnabled){
+      display.setCursor(0, 15);
+      display.println("    datalogging: ON");
+      display.setCursor(0, 30);
+      display.println("< stop datalogger");
+      display.setCursor(0, 50);
+      display.println("< show live data    ");
+    } 
+    else{
+      display.println("    datalogging: OFF");
+      display.setCursor(0, 30);
+      display.println("< start datalogger");
+      display.setCursor(0, 50);
+      display.println("< home              ");
+   }
+    
   display.display();
   
 }
@@ -151,15 +160,13 @@ void displayDashboard(error_conditions_t error)
 
   display.clearDisplay();
   display.setCursor(0, 0);
-  display.println(" Socket Steward 0.01 ");
-  display.println("                     ");
-  display.println("                     ");
+  display.println("Socket Steward  0.4.3");
+  display.setCursor(0, 15);
   display.println(error_message_table[error].dashboardMsg);
-  display.println("                     ");
-  display.println("< Options            ");
-  display.println("                     ");
-  display.println("< Details            ");
-  display.println("                     ");
+  display.setCursor(0, 30);
+  display.println("< datalogger controls");
+  display.setCursor(0, 50);
+  display.println("< show live data");
   
   display.display();
   
@@ -170,39 +177,57 @@ void displayDetails(error_conditions_t error)
 
   display.clearDisplay();
   display.setCursor(0, 0);
-  display.println(" Socket Steward 0.01 ");
-  if(no_error != error)
+   display.println("Socket Steward  0.4.3");
+   if(no_error != error)
   {
   display.println("                     ");
   display.println(error_message_table[error].detailedErrorMsg);
   display.println("                     ");
-  display.println("< exit               ");
+  display.println("< home               ");
   display.println("                     ");
   }
   else
   {
-  
-    display.print("Ambient:");
-    display.print(gSensors.ambientTemp);
-    display.print("C Plug:");
-    display.print(gSensors.plugTemp);
-    display.println("C ");
-    display.print("LeftReceptical:");
-    display.print(gSensors.LRecepticalTemp);
-    display.println("C ");
-    display.print("RightReceptical:");
-    display.print(gSensors.RRecepticalTemp);
-    display.println("C ");
+    display.clearDisplay();
+    display.setCursor(0, 0); // overwrite banner with timestamp
     
-    display.print("Voltage :");
+    String dataString = "";
+    dataString += String(now.month());
+    dataString += "/";
+    dataString += String(now.day());
+     dataString += " ";
+    dataString += String(now.hour());
+    dataString += ":";
+    dataString += String(now.minute());
+    dataString += ":";
+    dataString += String(now.second());
+    if(dataloggingEnabled)
+      dataString += " LOGGING";
+    display.println(dataString);
+   
+    display.setCursor(0, 13);
+    display.print("Amb:");
+    display.print(gSensors.ambientTemp);
+    display.print(" C     Plug:");
+    display.print(gSensors.plugTemp);
+    display.println(" C");
+   
+    display.setCursor(0, 25);
+    display.print("lPin:");
+    display.print(gSensors.LRecepticalTemp);
+    display.print(" C   rPin:");
+    display.print(gSensors.RRecepticalTemp);
+    display.println(" C");
+    
+    display.setCursor(0, 37);
+    display.print("Volts:");
     display.print(gSensors.voltage);
-    display.println(" V ");
-    display.print("Current :");
-    display.print(gSensors.current);
-    display.println(" A ");
-    display.print("< exit               ");
-    display.println("                     ");
-
+    display.print(" Amps:");
+    display.println(gSensors.current);
+    
+    display.setCursor(0, 50);
+    display.print("< datalogger controls");
+    
   }
   
   display.display();
