@@ -25,6 +25,7 @@ char daysOfTheWeek[7][12] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thurs
 bool dataloggingEnabled = false;
 bool startLogging();
 void stopLogging();
+bool system_log(String msg);
 
 bool gSDCardInited = false;
 /********************* Scheduling Related Variables *************************/

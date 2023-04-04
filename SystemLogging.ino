@@ -96,11 +96,11 @@ void data_logging(void) {
     fileName += "-";
     fileName += String(now.year());
     fileName += ".CSV";
-    
    
     File dataFile = SD.open(fileName, FILE_WRITE);  
     // if the file is available, write to it:
-    if (dataFile) {
+    if (dataFile) 
+    {
       String dataString = "";
       dataString += String(now.month());
       dataString += "/";
@@ -140,8 +140,44 @@ void data_logging(void) {
 
       Serial.println("Datalogging has been disabled. Insert SD Card and reboot");
     }
-
-    
-    
   }
 }
+
+bool system_log(String msg)
+{
+  if(false == gSDCardInited)
+  {
+    return false;
+  }
+
+   String fileName = "AlarmLog.txt";
+    
+   
+    File dataFile = SD.open(fileName, FILE_WRITE);  
+    // if the file is available, write to it:
+    if (dataFile) 
+    {
+      String dataString = "";
+      dataString += String(now.month());
+      dataString += "/";
+      dataString += String(now.day());
+      dataString += "/";
+      dataString += String(now.year());
+      dataString += ",";
+      dataString += String(now.hour());
+      dataString += ":";
+      dataString += String(now.minute());
+      dataString += ":";
+      dataString += String(now.second());
+      dataString += ":";
+      dataString += msg;
+      dataFile.println(dataString);
+      dataFile.close();
+      // print to the serial port too:
+      Serial.println(dataString);
+      return true;
+    }
+    Serial.println("Failed to write Log");
+    return false;
+}
+

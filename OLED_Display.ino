@@ -232,7 +232,7 @@ void displayDetails(error_conditions_t error)
     display.setCursor(0, 25);
     display.print("lPin:");
     display.print(gSensors.LRecepticalTemp);
-    display.print(" C   rPin:");
+    display.print(" C  rPin:");
     display.print(gSensors.RRecepticalTemp);
     display.println(" C");
     
