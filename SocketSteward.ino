@@ -23,9 +23,10 @@ char daysOfTheWeek[7][12] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thurs
 //Flag so the Button Thread can Start/Stop DataLogging
 
 bool dataloggingEnabled = false;
-void startLogging();
+bool startLogging();
 void stopLogging();
 
+bool gSDCardInited = false;
 /********************* Scheduling Related Variables *************************/
 #define INTERVAL_ALWAYS 0
 #define INTERVAL_10ms 10

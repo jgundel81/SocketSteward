@@ -13,9 +13,6 @@ typedef struct
 buttonStatus_t gButtonStatus;
 
 
-//Functions to set Logging from Button Presses
-void startLogging();
-void stopLogging();
 
 #define BUTTON_A  9
 #define BUTTON_B  6

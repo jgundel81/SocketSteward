@@ -20,6 +20,11 @@ void initSDCard(void) {
   if (!SD.begin(chipSelect))
   {
     Serial.println("Card failed, or not present");
+
+  }
+  else
+  {
+     gSDCardInited = true;
   }
   Serial.println("card initialized.");
 }
@@ -30,9 +35,15 @@ String msg = "";
 /*
 *   Function to set debug flag
 */
-void startLogging() {
+bool startLogging() {
+  if(false == gSDCardInited)
+  {
+    gCurrentError = sdcard_error;
+    return false;
+  }
   Serial.println("Start Logging");
   dataloggingEnabled = true;
+  return true;
 }
 
 
@@ -125,6 +136,8 @@ void data_logging(void) {
       Serial.print(fileName);
       Serial.println(" could not be opened");
       dataloggingEnabled = false;
+      gCurrentError = sdcard_error;
+
       Serial.println("Datalogging has been disabled. Insert SD Card and reboot");
     }
 

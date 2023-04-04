@@ -23,24 +23,7 @@ void control_task(void)
 
   //Add some logic here to set an error.
 
-  if(low_voltage < 25){
-
-    gCurrentError = low_voltage;
-    
-  }
-  else 
-{  
-  gCurrentError = no_error;
-
-}
-  if(gSensors.plugTemp > 27)
-  {
-    gCurrentError = thermal_runaway;
-  }
-  else
-  {
-    gCurrentError = no_error;
-  }
+  
 
 
 
