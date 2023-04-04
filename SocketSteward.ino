@@ -37,7 +37,6 @@ static uint8_t taskIndex = 0;
 
 /********************* Thread Prototypes used in table ***********************/
 void data_logging(void);
-void blinkLED(void);
 void display_task(void);
 void button_task(void);
 void sensormonitor_task(void);
@@ -48,10 +47,9 @@ void PowerManagement_task(void);
 void GetValues(void);
 
 
-/*********    TASk Table (insert Tasks into Table **********************/
+/*********    TASK Table (insert Tasks into Table **********************/
 static TaskType Tasks[] = {
   { INTERVAL_1000ms, 0, RTC_task },
-  { INTERVAL_1000ms, 0, blinkLED },
   { INTERVAL_500ms, 0, display_task },
   { INTERVAL_10ms, 0, button_task },
   { INTERVAL_10ms, 0, GetValues },
@@ -118,20 +116,4 @@ void loop() {
       pTask[taskIndex].lastTick = millis();
     }
   }
-}
-
-
-/*
- *   Function Name: blinkLED 
- * 
- *   Description: Blinks LED 1000ms
- *   
- */
-void blinkLED(void) {
-  static bool ledState = false;
-  digitalWrite(LED_PIN, ledState);
-  if (ledState == true)
-    ledState = false;
-  else
-    ledState = true;
 }
