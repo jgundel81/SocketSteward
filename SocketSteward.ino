@@ -58,6 +58,7 @@ void RTC_task(void);
 void control_task(void);
 void blinkpattern_task(void);
 void GetValues(void);
+void check_Sensor()
 
 
 /*********    TASK Table (insert Tasks into Table **********************/

@@ -43,9 +43,10 @@ void check_Sensor(){
 
    if (!ambientTemp.begin(0x18)) {
     Serial.println("Couldn't find MCP9808! Check your connections and verify the address is correct.");
+   }
      else
   {
-     gcheckSensor = true;
+     check_Sensor = true;
   }
   Serial.println("Found MCP9808!");
 
@@ -63,7 +64,7 @@ void sensormonitor_task(void)
   gSensors.RRecepticalTemp = tempInCelcius(analogRead(RRECEPTICALTEMP_PIN));
   
   ambientTemp.wake();   // wake up, ready to read!
-  ambientTemp.tempInCelcius();
+  ambientTemp.getSensor();
 
   //Add Temperature Sampling/ Calculations and Storing
 
