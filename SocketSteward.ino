@@ -11,6 +11,8 @@
 #include <Adafruit_AW9523.h>
 #include <math.h>
 #include <wiring_analog.h>
+#include <Wire.h>
+#include "Adafruit_MCP9808.h"
 Adafruit_AW9523 aw;
 
 #define RMS_WINDOW 50   // rms window of 50 samples, means 3 periods @60Hz

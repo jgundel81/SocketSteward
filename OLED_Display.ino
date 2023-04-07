@@ -224,7 +224,7 @@ void displayDetails(error_conditions_t error)
    
     display.setCursor(0, 13);
     display.print("Amb:");
-    display.print(gSensors.ambientTemp);
+    display.print(ambientTemp.tempInCelcius);
     display.print(" C   Plug:");
     display.print(gSensors.plugTemp);
     display.println(" C");
