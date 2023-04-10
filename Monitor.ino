@@ -18,10 +18,13 @@ int acCurr;
 //This will most likely need to be modified.
 typedef struct
 {
-  int ambientTemp;
-  int LRecepticalTemp;
-  int RRecepticalTemp;
-  int plugTemp;
+  float ambientTemp;
+  float LRecepticalTemp;
+  float LRecepticalTempCorrection;
+  float RRecepticalTemp;
+  float RRecepticalTempCorrection;
+  float plugTemp;
+  float plugTempCorrection;
   float voltage;
   float current;
   // Add the rest of the sensors to monitor here.
@@ -42,9 +45,9 @@ void sensormonitor_task(void)
   gSensors.current = acPower.rmsVal2;
 
   gSensors.ambientTemp = tempInCelcius(analogRead(AMBIENTTEMP_PIN));
-  gSensors.plugTemp = tempInCelcius(analogRead(PLUGTEMP_PIN));
-  gSensors.LRecepticalTemp = tempInCelcius(analogRead(LRECEPTICALTEMP_PIN));
-  gSensors.RRecepticalTemp = tempInCelcius(analogRead(RRECEPTICALTEMP_PIN));
+  gSensors.plugTemp = tempInCelcius(analogRead(PLUGTEMP_PIN)) + gSensors.plugTempCorrection;
+  gSensors.LRecepticalTemp = tempInCelcius(analogRead(LRECEPTICALTEMP_PIN)) + gSensors.LRecepticalTempCorrection;
+  gSensors.RRecepticalTemp = tempInCelcius(analogRead(RRECEPTICALTEMP_PIN)) + gSensors.RRecepticalTempCorrection;
   //Add Temperature Sampling/ Calculations and Storing
 
   //Sample the other Sensors
@@ -67,4 +70,43 @@ double tempInCelcius(int adcVal)
 
   temperature =(1/((1/T0) + ((1/B)*log(R/R0))) - 273.15)  ;
   return temperature;
+}
+
+void readCalibrationData(void) 
+{
+  Serial.println("Starting readCalibrationData()");
+  
+  //get processor ID for reading calibration file that we don't want used on wrong processor
+  uint8_t uniqueID [16]; //https://github.com/smartmeio/microcontroller-id-library/blob/master/README.md
+
+  MicroID.getUniqueID(uniqueID, 16);
+
+  char id [41];
+  MicroID.getUniqueIDString(id);
+  Serial.print("Device ID (string): ");
+  Serial.println(id);
+  //This should be stored in the calibration file at some point and verified  
+  String calibrationString="0,0,0,0";
+  
+  File calibrationFile = SD.open("SenCal.csv", FILE_READ);  
+  // if the file is available, read:
+  if (calibrationFile) {
+    char * csv_str = 0;
+    //CSV_Parser cp( csv_str,  true, ',');
+    
+    
+    
+    //calibrationString = calibrationFile.readStringUntil('\n');
+    
+    
+  }
+  else
+  {
+    Serial.println("error opening SenCal.csv");
+  }
+  Serial.println("calibratinString is ");
+  Serial.println(calibrationString);
+  calibrationFile.close();
+
+  
 }

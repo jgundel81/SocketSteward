@@ -48,9 +48,9 @@ void RTC_task(void)
 {
 
   //Only init once
-  static bool isInited = false;
-  if (false == isInited) {
-    isInited = true;
+  static bool RTCInited = false;
+  if (false == RTCInited) {
+    RTCInited = true;
     initRTC();
   }
   //Set the Time from the RTC into Global now Variables

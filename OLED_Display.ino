@@ -5,6 +5,9 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SH110X.h>
+//#include <vector>
+//#include <CSV_Parser.h> // Install CSV Parser Library (present in Arduino IDE library manager)
+using namespace std;
 
 Adafruit_SH1107 display = Adafruit_SH1107(64, 128, &Wire);
 
@@ -42,6 +45,7 @@ void initOLED(void) {
   display.display(); // actually display all of the above
 }
 
+
 /*
 * OLED Task Updates the OLED Display
 */
@@ -49,10 +53,10 @@ void display_task(void) {
 
   static int count = 0;
   //Only init once
-  static bool isInited = false;
-  if(false == isInited)
+  static bool OLEDInited = false;
+  if(false == OLEDInited)
   {
-    isInited = true;
+    OLEDInited = true;
     initOLED();
   }
 
@@ -93,7 +97,10 @@ void display_task(void) {
           if(true == dataloggingEnabled)
             stopLogging();
           else
+          {
             startLogging();
+           // readCalibrationData();
+          }
         } 
         else if(BUTTON_C == gButtonStatus.button)
         {
@@ -132,7 +139,7 @@ void displayOptions(error_conditions_t error)
 
   display.clearDisplay();
   display.setCursor(0, 0);
-  display.println("Socket Steward 0.4.3");  // use top row for future "more options button "
+  display.println("Socket Steward J4.10");  // use top row for future "more options button "
   display.println("                     ");
   display.setCursor(0, 15);
     if(dataloggingEnabled){
@@ -160,7 +167,7 @@ void displayDashboard(error_conditions_t error)
 
   display.clearDisplay();
   display.setCursor(0, 0);
-  display.println("Socket Steward  0.4.3");
+  display.println("Socket Steward  J4.10");
   display.setCursor(0, 15);
   display.println(error_message_table[error].dashboardMsg);
   display.setCursor(0, 30);
@@ -177,7 +184,7 @@ void displayDetails(error_conditions_t error)
 
   display.clearDisplay();
   display.setCursor(0, 0);
-   display.println("Socket Steward  0.4.3");
+   display.println("Socket Steward  J4.10");
    if(no_error != error)
   {
   display.println("                     ");
@@ -205,25 +212,28 @@ void displayDetails(error_conditions_t error)
       dataString += " LOGGING";
     display.println(dataString);
    
-    display.setCursor(0, 13);
-    display.print("Amb:");
+    display.setCursor(0, 15);
+    display.print("Ta ");
     display.print(gSensors.ambientTemp);
-    display.print(" C     Plug:");
+    display.print(" Tpl ");
     display.print(gSensors.plugTemp);
-    display.println(" C");
+    
    
-    display.setCursor(0, 25);
-    display.print("lPin:");
+    display.setCursor(0, 29);
+    display.print("TpL ");
     display.print(gSensors.LRecepticalTemp);
-    display.print(" C   rPin:");
+    display.print(" TpR ");
     display.print(gSensors.RRecepticalTemp);
-    display.println(" C");
+    
     
     display.setCursor(0, 37);
+   
+    /*
     display.print("Volts:");
     display.print(gSensors.voltage);
     display.print(" Amps:");
     display.println(gSensors.current);
+    */
     
     display.setCursor(0, 50);
     display.print("< datalogger controls");

@@ -35,10 +35,10 @@ void initButtons(void)
 */ 
 void button_task(void)
 {
-  static bool isInited = false;
-  if(false == isInited)
+  static bool ButtonsInited = false;
+  if(false == ButtonsInited)
   {
-    isInited = true;
+    ButtonsInited = true;
     initButtons();
   }
 

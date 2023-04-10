@@ -14,14 +14,19 @@ const int chipSelect = 10;
 *
 */
 void initSDCard(void) {
-  Serial.print("Initializing SD card...");
+  Serial.println(" initSDCard() called");
 
   // see if the card is present and can be initialized:
   if (!SD.begin(chipSelect))
   {
     Serial.println("Card failed, or not present");
+    //SDInited=false;
   }
-  Serial.println("card initialized.");
+  else
+  {
+    Serial.println("Card initialized.");
+  }
+  
 }
 
 
@@ -33,6 +38,7 @@ String msg = "";
 void startLogging() {
   Serial.println("Start Logging");
   dataloggingEnabled = true;
+  firstRun = true;
 }
 
 
@@ -52,15 +58,17 @@ void stopLogging() {
 * 
 */
 void data_logging(void) {
-  static bool isInited = false;
+  static bool SDInited = false;
   static uint32_t tick = 0;
 
   uint32_t analogValues[5] = { 0 };
 
 
   //ONLY do this once
-  if (false == isInited) {
-    isInited = true;
+  if (false == SDInited) 
+  {
+    SDInited = true;
+    Serial.println("Calling initSDCard from data_logging() and setting SDInited to true");
     initSDCard();
   }
 
@@ -69,8 +77,8 @@ void data_logging(void) {
     return;
   }
 
-  //Only Log every 10 seconds
-  if (0 == (tick++ % 10)) 
+    //Only Log every 5 seconds
+  if (0 == (tick++ % 5)) 
   {
 
     //Serial.println("Logging");
@@ -80,9 +88,7 @@ void data_logging(void) {
      
     String fileName = "";
     fileName += String(now.month());
-    fileName += "-";
     fileName += String(now.day());
-    fileName += "-";
     fileName += String(now.year());
     fileName += ".CSV";
     
@@ -90,6 +96,13 @@ void data_logging(void) {
     File dataFile = SD.open(fileName, FILE_WRITE);  
     // if the file is available, write to it:
     if (dataFile) {
+      if(firstRun == true)
+      {
+          String firstLine = "Date,Time,Tambient,TleftBlade,TrightBlade,Tplug,Vrms,Irms";
+          dataFile.println(firstLine);
+          Serial.println(firstLine);
+          firstRun = false;
+      }
       String dataString = "";
       dataString += String(now.month());
       dataString += "/";
@@ -112,9 +125,8 @@ void data_logging(void) {
       dataString += String(gSensors.plugTemp);
       dataString += ",";
       dataString += String(gSensors.voltage);
-      dataString += " V,";
+      dataString += ",";
       dataString += String(gSensors.current);
-      dataString += " A";
       dataFile.println(dataString);
       dataFile.close();
       // print to the serial port too:
@@ -126,6 +138,8 @@ void data_logging(void) {
       Serial.println(" could not be opened");
       dataloggingEnabled = false;
       Serial.println("Datalogging has been disabled. Insert SD Card and reboot");
+      void end(); // Will this allow hot insertion of an SD card?
+      SDInited = false;
     }
 
     

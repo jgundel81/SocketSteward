@@ -11,6 +11,8 @@
 #include <Adafruit_AW9523.h>
 #include <math.h>
 #include <wiring_analog.h>
+#include <MicrocontrollerID.h>
+
 Adafruit_AW9523 aw;
 
 #define RMS_WINDOW 50   // rms window of 50 samples, means 3 periods @60Hz
@@ -23,6 +25,7 @@ char daysOfTheWeek[7][12] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thurs
 //Flag so the Button Thread can Start/Stop DataLogging
 
 bool dataloggingEnabled = false;
+bool firstRun = false;
 void startLogging();
 void stopLogging();
 
@@ -92,7 +95,7 @@ void setup()
 {
    pinMode(LED_PIN, OUTPUT);
    Serial.begin(9600);
-   delay(5000);
+   delay(3000);
 
   //Initialize GPIO Expander.
    if (! aw.begin(0x58))
@@ -111,10 +114,15 @@ void setup()
   }
   acPower.begin(VoltRange, acCurrRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
   acPower.start(); //start measuring
-  Serial.println("called acPower.begin() during setup()");
+  //Serial.println("called acPower.begin() during setup()");
+  
+  
 
 
 }
+  
+
+
 
 
 /*
