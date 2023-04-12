@@ -26,7 +26,6 @@ typedef enum
   mrg_cap_confirmed,          //Marginal capacity confirmed
   load_prsnt_at_pwr,          //Load present at power
   ext_volt_dips_det,          //external volt DIPS detected
-  exc_volt_drop_load,   //Excessive voltage drop under load
   null,
   unknown_trip,
   NUM_OF_ERRORS     //This needs to be last 
@@ -83,8 +82,7 @@ error_messages_t error_message_table[NUM_OF_ERRORS] = {
   {" full_cap_confirmed  ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//full_cap_confirmed
   {" mrg_cap_confirmed   ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//mrg_cap_confirmed
   {" load_prsnt_at_pwr   ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//load_prsnt_at_pwr
-  {" ext_volt_dips_det   ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//ext_volt_dips_det
-  {" exc_volt_drop_load  ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//exc_volt_drop_load
+  {" ext_volt_dips_dect  ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//ext_volt_dips_dect
   {" null                ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//Null  
   {" Unknown Trip        ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//unknown_trip,
 };
@@ -109,7 +107,6 @@ ledErrorBlinkPattern_t error_led_table[NUM_OF_ERRORS] = {
   {{0,0},{0,0},{0,0}},//mrg_cap_confirmed,
   {{0,0},{0,0},{0,0}},//load_prsnt_at_pwr,
   {{0,0},{0,0},{0,0}},//ext_volt_dips_det,
-  {{0,0},{0,0},{0,0}},//exc_volt_drop_load,
   {{0,0},{0,0},{0,0}},//null,      
   {{0,0},{0,0},{0,0}},//unknown_trip,
 };

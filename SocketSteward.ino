@@ -9,6 +9,8 @@
 #include <string.h>
 #include <TrueRMS.h>
 #include <Adafruit_AW9523.h>
+#include <math.h>
+#include <wiring_analog.h>
 Adafruit_AW9523 aw;
 
 #define RMS_WINDOW 50   // rms window of 50 samples, means 3 periods @60Hz
@@ -18,12 +20,19 @@ char daysOfTheWeek[7][12] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thurs
 
 #define LED_PIN 13
 
+//Flag so the Button Thread can Start/Stop DataLogging
+
+bool dataloggingEnabled = false;
+void startLogging();
+void stopLogging();
+
 /********************* Scheduling Related Variables *************************/
 #define INTERVAL_ALWAYS 0
 #define INTERVAL_10ms 10
 #define INTERVAL_100ms 100
 #define INTERVAL_500ms 500
 #define INTERVAL_1000ms 1000
+#define INTERVAL_10S 10000
 
 typedef struct _task {
   uint16_t interval;
@@ -43,7 +52,6 @@ void sensormonitor_task(void);
 void RTC_task(void);
 void control_task(void);
 void blinkpattern_task(void);
-void PowerManagement_task(void);
 void GetValues(void);
 
 
@@ -55,8 +63,9 @@ static TaskType Tasks[] = {
   { INTERVAL_10ms, 0, GetValues },
   { INTERVAL_100ms, 0, control_task },
   { INTERVAL_500ms, 0, sensormonitor_task },
-  { INTERVAL_500ms, 0, PowerManagement_task },
   { INTERVAL_100ms, 0, blinkpattern_task},
+  { INTERVAL_1000ms, 0, data_logging},
+  
 };
 
 const uint8_t numOfTasks = sizeof(Tasks) / sizeof(*Tasks);
@@ -65,11 +74,10 @@ TaskType *getTable(void) {
   return Tasks;
 }
 
-
-//Used for RMS Calculations
 Power acPower;  // create an instance of Power
 float VoltRange = 2000.00; // The full scale value is set to 5.00 Volts but can be changed when using an
 float acCurrRange = 130; // peak-to-peak current scaled down to 0-5V is 5A (=5/2*sqrt(2) = 1.77Arms max).
+
 
 
 /*
@@ -82,12 +90,18 @@ void setup()
 {
    pinMode(LED_PIN, OUTPUT);
    Serial.begin(9600);
+   delay(5000);
 
   //Initialize GPIO Expander.
    if (! aw.begin(0x58))
    {
     Serial.println("AW9523 not found? Check wiring!");
    }
+   else
+   {
+     Serial.println("AW9523 found, thank you");
+   }
+   
   pTask = getTable();
   if (NULL == pTask) {
     //Error
@@ -96,6 +110,15 @@ void setup()
   }
   acPower.begin(VoltRange, acCurrRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
   acPower.start(); //start measuring
+  Serial.println("called acPower.begin() during setup()");
+
+  //Turn on test load
+  //aw.pinMode(13, OUTPUT);
+  pinMode(4, OUTPUT);
+  //aw.digitalWrite(13, HIGH);
+  //delay(50);
+  //aw.digitalWrite(13, LOW);
+
 }
 
 
@@ -107,6 +130,7 @@ void setup()
  */
 void loop() {
   for (taskIndex = 0; taskIndex < numOfTasks; taskIndex++) {
+  
     //Run primitive Scheduler
     if (0 == pTask[taskIndex].interval) {
       //run every loop

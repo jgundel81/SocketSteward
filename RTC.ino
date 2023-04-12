@@ -34,7 +34,11 @@ void initRTC(void)
     // crystal oscillator time to stabilize. If you call adjust() very quickly
     // after the RTC is powered, lostPower() may still return true.
   }
-
+  else
+  {
+  // Serial.println("jamming RTC init cause it is not working right");
+  // rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));  // remove this one time use  force RTC time update
+  }
 }
 
 /*

@@ -1,6 +1,18 @@
 /*
- *. Monitor.ino
+ *. Monito.ino
  */
+
+//Function Prototypes
+double tempInCelcius(int adcVal);
+#define LRECEPTICALTEMP_PIN A4
+#define RRECEPTICALTEMP_PIN A5
+#define PLUGTEMP_PIN A3
+#define VOLTAGE_PIN A1
+#define CURRENT_PIN A2
+#define AMBIENTTEMP_PIN A0
+
+int acVolt;
+int acCurr;
 
 //Structure to hold all Sensor information
 //This will most likely need to be modified.
@@ -17,84 +29,44 @@ typedef struct
 
 system_sensors_t gSensors;
 
-const int chipSelect = 10;
-
-void sensormonitor_task(void) {
-  Serial.println(" ");
-
-  //Add Temperature Sampling/ Calculations and Storing
-
-  //Sample the other Sensors
-}
-
-void initSDCard(void) {
-  Serial.print("Initializing SD card...");
-
-  // see if the card is present and can be initialized:
-  if (!SD.begin(chipSelect))
-  {
-    Serial.println("Card failed, or not present");
-  }
-  Serial.println("card initialized.");
-}
-
-int acVolt;
-int acCurr;
-
 void GetValues(void)  {
+  digitalWrite(4, LOW);
   acVolt = analogRead(A1);  // read the ADC, channel for Vin
   acCurr = analogRead(A2);  // read the ADC, channel for Iin
   acPower.update(acVolt, acCurr);
 }
 
-
-void PowerManagement_task(void) {
-  // run repeatedly:
-
-  static bool isInited = false;
-
-  if (false == isInited) {
-    isInited = true;
-    initSDCard();
-  }
-
-
-  //RmsReading.update(adcVal-512);  // without automatic baseline restoration (BLR_OFF),
-  // substract a fixed DC offset in ADC-units here.
+void sensormonitor_task(void)
+{
   acPower.publish();
-  Serial.print(acPower.rmsVal1, 1);  // [V]
-  Serial.print(", ");
-  Serial.print(acPower.rmsVal2, 1);  // [A]
-  Serial.print(", ");
-  Serial.print(acPower.realPwr, 1);  // [P]
-  Serial.print(", ");
-  Serial.println(acPower.energy / 3600, 2);  // [Wh]
+  digitalWrite(4, HIGH);
+  gSensors.voltage = acPower.rmsVal1;
+  gSensors.current = acPower.rmsVal2;
 
-  String dataString = "";
-  dataString += String(now.month());
-  dataString += "/";
-  dataString += String(now.day());
-  dataString += "/";
-  dataString += String(now.year());
-  dataString += " ";
-  dataString += String(now.hour());
-  dataString += ":";
-  dataString += String(now.minute());
-  dataString += ":";
-  dataString += String(now.second());
-  dataString += ",";
-  dataString += String(acPower.rmsVal1);
-  dataString += ",";
-  dataString += String(acPower.rmsVal2);
-  dataString += ",";
-  dataString += String(acPower.realPwr);
-  dataString += ",";
-  dataString += String(acPower.energy / 3600);
+  gSensors.ambientTemp = tempInCelcius(analogRead(AMBIENTTEMP_PIN));
+  gSensors.plugTemp = tempInCelcius(analogRead(PLUGTEMP_PIN));
+  gSensors.LRecepticalTemp = tempInCelcius(analogRead(LRECEPTICALTEMP_PIN));
+  gSensors.RRecepticalTemp = tempInCelcius(analogRead(RRECEPTICALTEMP_PIN));
+  //Add Temperature Sampling/ Calculations and Storing
 
-  File dataFile = SD.open("datalog.csv", FILE_WRITE);
-  // if the file is available, write to it:
-  if (dataFile) {
-    dataFile.println(dataString);
-    dataFile.close();
-  }
+  //Sample the other Sensors
+}
+
+double B =3380;        //Parameter of Thermistor
+double T0 = 298.15;     //Room Temp in Kelvin  
+double R0 = 10000;      //Resistance of Thermistor at Room Temp
+double VREF = 3.3;      //VREF of ADC
+double ADC_PRECISION = 1023.0; 
+
+double tempInCelcius(int adcVal)
+{
+  double R;            //Calculated Resistance of Thermistor
+  double temperature;  //Calculated Temp in C
+  double voltage;      //Calcuated Voltage at ADC Pin
+  
+  voltage = ( (adcVal * VREF) / ADC_PRECISION ); 
+  R = ((VREF * 10000) / voltage) - 10000;
+
+  temperature =(1/((1/T0) + ((1/B)*log(R/R0))) - 273.15)  ;
+  return temperature;
 }
