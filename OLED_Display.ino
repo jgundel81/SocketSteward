@@ -98,7 +98,9 @@ void display_task(void) {
             stopLogging();
           else
           {
+            dataLoggingStartedTime = now;
             startLogging();
+
            // readCalibrationData();
           }
         } 
@@ -139,7 +141,7 @@ void displayOptions(error_conditions_t error)
 
   display.clearDisplay();
   display.setCursor(0, 0);
-  display.println("Socket Steward J4.10");  // use top row for future "more options button "
+  display.println("Socket Steward J4.12");  // use top row for future "more options button "
   display.println("                     ");
   display.setCursor(0, 15);
     if(dataloggingEnabled){
@@ -167,7 +169,7 @@ void displayDashboard(error_conditions_t error)
 
   display.clearDisplay();
   display.setCursor(0, 0);
-  display.println("Socket Steward  J4.10");
+  display.println("Socket Steward J4.12");
   display.setCursor(0, 15);
   display.println(error_message_table[error].dashboardMsg);
   display.setCursor(0, 30);
@@ -184,7 +186,7 @@ void displayDetails(error_conditions_t error)
 
   display.clearDisplay();
   display.setCursor(0, 0);
-   display.println("Socket Steward  J4.10");
+   display.println("Socket Steward  J4.12");
    if(no_error != error)
   {
   display.println("                     ");
@@ -236,7 +238,17 @@ void displayDetails(error_conditions_t error)
     */
     
     display.setCursor(0, 50);
-    display.print("< datalogger controls");
+    dataString = "< ctrls ";
+    if(dataloggingEnabled)
+    {
+      dataString += "t0=";
+      dataString += String(dataLoggingStartedTime.hour());
+      dataString += ":";
+      dataString += String(dataLoggingStartedTime.minute());
+      dataString += ":";
+      dataString += String(dataLoggingStartedTime.second());
+    }
+    display.println(dataString);
     
   }
   

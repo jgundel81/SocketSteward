@@ -92,7 +92,8 @@ void data_logging(void) {
     fileName += String(now.year());
     fileName += ".CSV";
     
-   
+    String dataString = "";
+      
     File dataFile = SD.open(fileName, FILE_WRITE);  
     // if the file is available, write to it:
     if (dataFile) {
@@ -103,7 +104,6 @@ void data_logging(void) {
           Serial.println(firstLine);
           firstRun = false;
       }
-      String dataString = "";
       dataString += String(now.month());
       dataString += "/";
       dataString += String(now.day());
@@ -135,11 +135,44 @@ void data_logging(void) {
     else
     {
       Serial.print(fileName);
-      Serial.println(" could not be opened");
-      dataloggingEnabled = false;
-      Serial.println("Datalogging has been disabled. Insert SD Card and reboot");
-      void end(); // Will this allow hot insertion of an SD card?
-      SDInited = false;
+      Serial.println(" could not be opened, trying again");
+      File dataFile = SD.open(fileName, FILE_WRITE);  
+      if (dataFile) {
+        dataFile.println("2nd try to open and write was beeded");
+        dataFile.println(dataString);
+        dataFile.close();
+        // print to the serial port too:
+        Serial.println(dataString);
+      }
+      else
+      {
+        Serial.println("second attempt to open file failed. Now will reinitialize SD card and try again. ");
+        void end();
+        delay(1000);
+        initSDCard();
+        File dataFile = SD.open(fileName, FILE_WRITE);  
+        if (dataFile) {
+          dataFile.println("3rd try to open and write worked after void and reinit");
+          Serial.println("3rd try to open and write worked after void and reinit");
+          dataFile.println(dataString);
+          dataFile.close();
+          // print to the serial port too:
+          Serial.println(dataString);
+        }
+        else
+        {
+         Serial.println("unable to open even after reinitializing the SD card. Must stop datalogging ");
+         void end();
+         dataloggingEnabled = false;
+         SDInited = false;
+        }
+      }
+
+     //
+      //Serial.println("Datalogging has been disabled. Insert SD Card and reboot");
+      
+      
+      
     }
 
     

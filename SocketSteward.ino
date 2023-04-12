@@ -18,6 +18,7 @@ Adafruit_AW9523 aw;
 #define RMS_WINDOW 50   // rms window of 50 samples, means 3 periods @60Hz
 
 DateTime now;
+DateTime dataLoggingStartedTime;
 char daysOfTheWeek[7][12] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 
 #define LED_PIN 13
@@ -95,16 +96,17 @@ void setup()
 {
    pinMode(LED_PIN, OUTPUT);
    Serial.begin(9600);
-   delay(3000);
+   delay(4000);
+
 
   //Initialize GPIO Expander.
-   if (! aw.begin(0x58))
+   if (!aw.begin(0x58))
    {
-    Serial.println("AW9523 not found? Check wiring!");
+    Serial.println("AW9523 GPIO Expander not found? Check wiring!");
    }
    else
    {
-     Serial.println("AW9523 found, thank you");
+     Serial.println("AW9523 GPOI Expander found, thank you");
    }
   pTask = getTable();
   if (NULL == pTask) {
