@@ -67,7 +67,7 @@ static TaskType Tasks[] = {
   { INTERVAL_500ms, 0, display_task },
   { INTERVAL_10ms, 0, button_task },
   { INTERVAL_10ms, 0, GetValues },
-  { INTERVAL_100ms, 0, control_task },
+  { INTERVAL_100ms, 0, control_task },  //if changing control task, please also change static tick1 to maintain 3 second timer
   { INTERVAL_500ms, 0, sensormonitor_task },
   { INTERVAL_100ms, 0, blinkpattern_task},
   { INTERVAL_1000ms, 0, data_logging},

@@ -14,13 +14,13 @@ const int chipSelect = 10;
 *
 */
 void initSDCard(void) {
-  Serial.println(" initSDCard() called");
+  Serial.println(" Initializing SD card");
 
   // see if the card is present and can be initialized:
-  if (!SD.begin(chipSelect))
+  if (! SD.begin(chipSelect))
   {
     Serial.println("Card failed, or not present");
-    //SDInited=false;
+    
   }
   else
   {
@@ -65,7 +65,7 @@ void data_logging(void) {
 
 
   //ONLY do this once
-  if (false == SDInited) 
+  if (false == SDInited) // Isn't this set to false only a few lines above?? - Jamie
   {
     SDInited = true;
     Serial.println("Calling initSDCard from data_logging() and setting SDInited to true");
@@ -83,8 +83,8 @@ void data_logging(void) {
 
     //Serial.println("Logging");
 
-    //Read the 5 ADCs
-    // This is where you can do the conversion!!
+    
+    
      
     String fileName = "";
     fileName += String(now.month());
@@ -135,7 +135,7 @@ void data_logging(void) {
     else
     {
       Serial.print(fileName);
-      Serial.println(" could not be opened, trying again");
+      Serial.println(" could not be opened, trying again");  //some rare cases 
       File dataFile = SD.open(fileName, FILE_WRITE);  
       if (dataFile) {
         dataFile.println("2nd try to open and write was beeded");
@@ -146,9 +146,9 @@ void data_logging(void) {
       }
       else
       {
-        Serial.println("second attempt to open file failed. Now will reinitialize SD card and try again. ");
+        Serial.println("second attempt to open file failed. Now will reinitialize SD card and try again. ");  //this message was once seen in a datalog. Not sure why the SD card needs re-initting 
         void end();
-        delay(1000);
+        delay(1000); // don't know if this is needed
         initSDCard();
         File dataFile = SD.open(fileName, FILE_WRITE);  
         if (dataFile) {

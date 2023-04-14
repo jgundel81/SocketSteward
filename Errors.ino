@@ -2,6 +2,36 @@
  *  Errors.ino
  */
 
+
+/* Power Status values from the Definitions tab in https://docs.google.com/spreadsheets/d/12GRyLT-Wnm3DVdJ-egUSnQluc5JlK3vpjTF1b88WlaU/edit#gid=319617444&range=B1
+*
+* Bitwise testing is in use, please add new state definitions with care. See the Macros that follow.
+* Please DO NOT set and clear individual bits. The resulting power status won't make sense. Just use or define a new power status. 
+* There is only ONE power status, the latest set by the last EVENT that happened. (presently called an error)
+*/
+
+// All connected states have bit position 4 set ie, Ox10 through 0x1F to allow bitwise tests. intermediate tests 
+#define	CONNECTED_NORMAL	          0x10
+#define	CONNECTED_NORMAL_NOTIFYING	0x11  //use if user maintenance is requested, perhaps network link down, etc. yet system is fully operational
+#define	CONNECTED_WATCH	            0x14  // use if power quality seems below NEC voltage drop goals or other impairments might be at hand. 
+#define	CONNECTED_WARNING	          0x16  // the system believes the power capacity is not sufficient for continuous loading, but should be OK with electronic, brief or low power continuous loading such as LED lighting.
+// all Disconnected states have bit position 5 set
+#define	DISCONNECTED_BY_ALARM     	0x20  // Software in this file decided to disconnect power
+#define	DISCONNECTED_BY_REQUEST   	0x21  // The user wanted power disconnected - perhaps by remote control or smartphone app
+#define	DISCONNECTED_BY_AFGF	      0x22  // the AFGF circuit told us it disconnected power via LED blink codes
+#define	DISCONNECTED_UNEXPECTED	    0x23  // voltage suddenly lost yet software still powered up
+#define	DISCONNECTED_AT_POWER_UP  	0x24  // during initialization the AFGF is believed tripped
+#define	DISCONNECTED_UNKNOWN	      0x25  // this is not fully unexpected yet ... perhaps AFGF blink codes or other functions need time. Should be a temporary state. 
+// other states where being connected or not is either pending or uncertain should NOT have a code that sets bit 4 or 5!
+#define	INITIALIZING	              0x00
+#define	ERROR_IN_SYSTEM	            0x0F // used if system issues are present, or being connected or disconnected is not certain. 
+
+// Bitwise test macros. To clarify how bitwise tests are being used, please add new macros here and avoid in-line tests elsewhere. 
+#define ANY_CONNECTED_STATUS(x) (x & (1UL << 4) ) 
+#define ANY_DISCONNECTED_STATUS(x) (x & (1UL << 5) ) 
+
+
+
 //Types of errors
 //This needs to be in the same order
 //as the tables below
@@ -26,14 +56,16 @@ typedef enum
   mrg_cap_confirmed,          //Marginal capacity confirmed
   load_prsnt_at_pwr,          //Load present at power
   ext_volt_dips_det,          //external volt DIPS detected
-  null,
+  boot_up,
   unknown_trip,
+  sensor_error,
   NUM_OF_ERRORS     //This needs to be last 
 } error_conditions_t;
 
 //Global Error Variable 
 //Used for menu display
-error_conditions_t gCurrentError;
+error_conditions_t gLatestEvent;
+int gPowerStatus = INITIALIZING;
 
 
 //Blink Pattern
@@ -60,7 +92,7 @@ typedef struct
 } error_messages_t;
 
 
-//Table of Error Messages
+//Table of Error Messages  (these are actually EVENTS, many not being true errors. Should be globally changed someday)
 //Make sure order matches enums above
 error_messages_t error_message_table[NUM_OF_ERRORS] = {
 /*. Splash Screen Msg            Detailed Message to be displayed on detailed message screen.  */
@@ -83,8 +115,9 @@ error_messages_t error_message_table[NUM_OF_ERRORS] = {
   {" mrg_cap_confirmed   ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//mrg_cap_confirmed
   {" load_prsnt_at_pwr   ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//load_prsnt_at_pwr
   {" ext_volt_dips_dect  ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//ext_volt_dips_dect
-  {" null                ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//Null  
+  {" Initializing System ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//Null  
   {" Unknown Trip        ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//unknown_trip,
+  {" Sensor Error        ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//unknown_trip,
 };
 
 ledErrorBlinkPattern_t error_led_table[NUM_OF_ERRORS] = {

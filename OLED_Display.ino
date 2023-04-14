@@ -64,7 +64,7 @@ void display_task(void) {
   switch(gDisplayState)
   {
     case dashboard:  // labeled HOME
-      displayDashboard(gCurrentError);
+      displayDashboard(gLatestEvent);
       if(true == gButtonStatus.buttonPressed)
       {
         gButtonStatus.buttonPressed = false;
@@ -84,7 +84,7 @@ void display_task(void) {
       }
       break;
     case options:  
-      displayOptions(gCurrentError);
+      displayOptions(gLatestEvent);
       if(gButtonStatus.buttonPressed)
       {
         gButtonStatus.buttonPressed = false;
@@ -114,7 +114,7 @@ void display_task(void) {
       }
       break;
     case details:
-       displayDetails(gCurrentError);
+       displayDetails(gLatestEvent);
       if(gButtonStatus.buttonPressed)
       {
         gButtonStatus.buttonPressed = false;
@@ -217,28 +217,28 @@ void displayDetails(error_conditions_t error)
     display.setCursor(0, 15);
     display.print("Ta ");
     display.print(gSensors.ambientTemp);
-    display.print(" Tpl ");
+    display.print(" Tplug ");
     display.print(gSensors.plugTemp);
     
    
-    display.setCursor(0, 29);
-    display.print("TpL ");
+    display.setCursor(0, 26);
+    display.print("TsL ");
     display.print(gSensors.LRecepticalTemp);
-    display.print(" TpR ");
+    display.print(" TsR ");
     display.print(gSensors.RRecepticalTemp);
     
     
     display.setCursor(0, 37);
    
-    /*
-    display.print("Volts:");
+    
+    display.print("v=");
     display.print(gSensors.voltage);
-    display.print(" Amps:");
+    display.print(" a=");
     display.println(gSensors.current);
-    */
+
     
     display.setCursor(0, 50);
-    dataString = "< ctrls ";
+    dataString = "< cntrl ";
     if(dataloggingEnabled)
     {
       dataString += "t0=";
