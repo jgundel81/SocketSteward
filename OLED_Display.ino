@@ -57,6 +57,7 @@ void display_task(void) {
   }
 
 
+
   switch(gDisplayState)
   {
     case dashboard:  // labeled HOME
@@ -86,7 +87,17 @@ void display_task(void) {
         gButtonStatus.buttonPressed = false;
         if(BUTTON_A == gButtonStatus.button)
         {
-          gDisplayState = dashboard;
+            TC.stopTimer(); 
+            delay(10);
+            acPower.stop();
+            acPower.begin(VoltRange, acCurrRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
+            acPower.start(); //start measuring
+            TC.restartTimer(1000); // 
+            delay(1000);
+            float val = getVoltageDrop();
+            Serial.print("Voltage Drop:");
+            Serial.println(val);
+            TC.restartTimer(2000); // 2 msec 
         }
         else if(BUTTON_B == gButtonStatus.button)
         {

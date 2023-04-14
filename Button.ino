@@ -39,10 +39,12 @@ void button_task(void)
     initButtons();
   }
 
+
   if(!digitalRead(BUTTON_A))
   {
     do
     {
+
       //Stay here while pressing Button
     }while(!digitalRead(BUTTON_A));
     gButtonStatus.button = BUTTON_A;
@@ -55,11 +57,10 @@ void button_task(void)
   {
     do
     {
-      //Stay here while pressing Button
+
     }while(!digitalRead(BUTTON_B));
     gButtonStatus.button = BUTTON_B;
     gButtonStatus.buttonPressed = true;
-    Serial.println("ButtonB");
     
   }
   if(!digitalRead(BUTTON_C))

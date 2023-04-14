@@ -33,7 +33,7 @@ void control_task(void)
 //   gCurrentError = no_error;
 
 // }
- 
+
     //only log error when it happens once
     if(previousError != gCurrentError)
     {
