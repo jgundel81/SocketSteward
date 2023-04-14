@@ -14,8 +14,6 @@ double tempInCelcius(int adcVal);
 int acVolt;
 int acCurr;
 
-// Create the MCP9808 temperature sensor object
-Adafruit_MCP9808 ambientTemp = Adafruit_MCP9808();
 
 //Structure to hold all Sensor information
 //This will most likely need to be modified.
@@ -38,19 +36,6 @@ void GetValues(void)  {
   acPower.update(acVolt, acCurr);
 }
 
-void check_Sensor(){
-   Serial.begin(9600);
-
-   if (!ambientTemp.begin(0x18)) {
-    Serial.println("Couldn't find MCP9808! Check your connections and verify the address is correct.");
-   }
-     else
-  {
-     check_Sensor = true;
-  }
-  Serial.println("Found MCP9808!");
-
-}
 
 void sensormonitor_task(void)
 {
@@ -58,15 +43,11 @@ void sensormonitor_task(void)
   gSensors.voltage = acPower.rmsVal1;
   gSensors.current = acPower.rmsVal2;
 
-  //gSensors.ambientTemp = tempInCelcius(analogRead(AMBIENTTEMP_PIN));
   gSensors.plugTemp = tempInCelcius(analogRead(PLUGTEMP_PIN));
   gSensors.LRecepticalTemp = tempInCelcius(analogRead(LRECEPTICALTEMP_PIN));
   gSensors.RRecepticalTemp = tempInCelcius(analogRead(RRECEPTICALTEMP_PIN));
+  gSensors.ambientTemp = tempInCelcius(analogRead(AMBIENTTEMP_PIN));
   
-  ambientTemp.wake();   // wake up, ready to read!
-  ambientTemp.getSensor();
-
-  //Add Temperature Sampling/ Calculations and Storing
 
   //Sample the other Sensors
 }
