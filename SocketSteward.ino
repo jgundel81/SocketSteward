@@ -11,6 +11,7 @@
 #include <Adafruit_AW9523.h>
 #include <math.h>
 #include <wiring_analog.h>
+#include <Wire.h>
 Adafruit_AW9523 aw;
 
 #define RMS_WINDOW 50   // rms window of 50 samples, means 3 periods @60Hz
@@ -20,12 +21,18 @@ char daysOfTheWeek[7][12] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thurs
 
 #define LED_PIN 13
 
+bool readLine(File &f, char* line, size_t maxLen);
+bool readVals(int* v1, int* v2, int* v3, int* v4, float* v5, float* v6);
+
+
 //Flag so the Button Thread can Start/Stop DataLogging
 
 bool dataloggingEnabled = false;
-void startLogging();
+bool startLogging();
 void stopLogging();
+bool system_log(String msg);
 
+bool gSDCardInited = false;
 /********************* Scheduling Related Variables *************************/
 #define INTERVAL_ALWAYS 0
 #define INTERVAL_10ms 10
@@ -101,7 +108,6 @@ void setup()
    {
      Serial.println("AW9523 found, thank you");
    }
-   
   pTask = getTable();
   if (NULL == pTask) {
     //Error
@@ -112,12 +118,6 @@ void setup()
   acPower.start(); //start measuring
   Serial.println("called acPower.begin() during setup()");
 
-  //Turn on test load
-  //aw.pinMode(13, OUTPUT);
-  pinMode(4, OUTPUT);
-  //aw.digitalWrite(13, HIGH);
-  //delay(50);
-  //aw.digitalWrite(13, LOW);
 
 }
 
@@ -141,3 +141,11 @@ void loop() {
     }
   }
 }
+
+
+/*
+ *   Function Name: blinkLED 
+ * 
+ *   Description: Blinks LED 1000ms
+ *   
+ */

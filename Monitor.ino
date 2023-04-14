@@ -14,6 +14,8 @@ double tempInCelcius(int adcVal);
 int acVolt;
 int acCurr;
 
+File testVector;  
+
 //Structure to hold all Sensor information
 //This will most likely need to be modified.
 typedef struct
@@ -29,25 +31,94 @@ typedef struct
 
 system_sensors_t gSensors;
 
-void GetValues(void)  {
-  digitalWrite(4, LOW);
-  acVolt = analogRead(A1);  // read the ADC, channel for Vin
-  acCurr = analogRead(A2);  // read the ADC, channel for Iin
-  acPower.update(acVolt, acCurr);
+bool readLine(File &f, char* line, size_t maxLen) {
+  for (size_t n = 0; n < maxLen; n++) {
+    int c = f.read();
+    if ( c < 0 && n == 0) return false;  // EOF
+    if (c < 0 || c == '\n') {
+      line[n] = 0;
+      return true;
+    }
+    line[n] = c;
+  }
+  return false; // line too long
 }
+
+bool readVals(int* v1, int* v2, int* v3, int* v4, float* v5, float* v6) {
+  char line[200], *ptr, *str;
+  if (!readLine(testVector, line, sizeof(line))) {
+    return false;  // EOF or too long
+  }
+  *v1 = strtol(line, &ptr, 10);
+  if (ptr == line) return false;  // bad number if equal
+  while (*ptr) {
+    if (*ptr++ == ',') break;
+  }
+  *v2 = strtol(ptr, &str, 10);
+  while (*ptr) {
+    if (*ptr++ == ',') break;
+  }
+  *v3 = strtol(ptr, &str, 10);
+  while (*ptr) {
+    if (*ptr++ == ',') break;
+  }
+  *v4 = strtol(ptr, &str, 10);
+  while (*ptr) {
+    if (*ptr++ == ',') break;
+  }
+  *v5 = strtol(ptr, &str, 10);
+  while (*ptr) {
+    if (*ptr++ == ',') break;
+  }
+  *v6 = strtol(ptr, &str, 10);
+  while (*ptr) {
+    if (*ptr++ == ',') break;
+  }
+  
+  return str != ptr;  // true if number found
+}
+
+void GetValues(void)  {
+    acVolt = analogRead(A1);  // read the ADC, channel for Vin
+    acCurr = analogRead(A2);  // read the ADC, channel for Iin
+    acPower.update(acVolt, acCurr);
+  }
+
 
 void sensormonitor_task(void)
 {
-  acPower.publish();
-  digitalWrite(4, HIGH);
-  gSensors.voltage = acPower.rmsVal1;
-  gSensors.current = acPower.rmsVal2;
-
-  gSensors.ambientTemp = tempInCelcius(analogRead(AMBIENTTEMP_PIN));
-  gSensors.plugTemp = tempInCelcius(analogRead(PLUGTEMP_PIN));
-  gSensors.LRecepticalTemp = tempInCelcius(analogRead(LRECEPTICALTEMP_PIN));
-  gSensors.RRecepticalTemp = tempInCelcius(analogRead(RRECEPTICALTEMP_PIN));
-  //Add Temperature Sampling/ Calculations and Storing
+  testVector = SD.open("TEST.CSV", FILE_READ);
+  if (testVector)
+  {
+    Serial.println("Found test vector!");
+    int pTemp, lRecTemp, rRecTemp, ambTemp;
+    float volt, cur;
+    readVals(&pTemp, &lRecTemp, &rRecTemp, &ambTemp, &volt, &cur);
+    gSensors.plugTemp = pTemp;
+    Serial.println(gSensors.plugTemp);
+    gSensors.LRecepticalTemp = lRecTemp;
+    Serial.println(gSensors.LRecepticalTemp);
+    gSensors.RRecepticalTemp = rRecTemp;
+    Serial.println(gSensors.RRecepticalTemp);
+    gSensors.ambientTemp = ambTemp;
+    Serial.println(gSensors.ambientTemp);
+    gSensors.voltage = volt;
+    Serial.println(gSensors.voltage);
+    gSensors.current = cur;
+    Serial.println(gSensors.current);
+    testVector.close();
+  }
+  else
+  {
+    Serial.println("Failed to find test vector!");
+    acPower.publish();
+    gSensors.voltage = acPower.rmsVal1;
+    gSensors.current = acPower.rmsVal2;
+    gSensors.plugTemp = tempInCelcius(analogRead(PLUGTEMP_PIN));
+    gSensors.LRecepticalTemp = tempInCelcius(analogRead(LRECEPTICALTEMP_PIN));
+    gSensors.RRecepticalTemp = tempInCelcius(analogRead(RRECEPTICALTEMP_PIN));
+    gSensors.ambientTemp = tempInCelcius(analogRead(AMBIENTTEMP_PIN));
+  }
 
   //Sample the other Sensors
 }

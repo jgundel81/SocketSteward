@@ -93,7 +93,13 @@ void display_task(void) {
           if(true == dataloggingEnabled)
             stopLogging();
           else
-            startLogging();
+          {
+
+           if(false == startLogging())
+            {
+              gDisplayState = dashboard;
+            }
+          }
         } 
         else if(BUTTON_C == gButtonStatus.button)
         {
@@ -119,7 +125,7 @@ void display_task(void) {
         } 
         else if(BUTTON_C == gButtonStatus.button)
         {
-          gDisplayState = options;
+        gDisplayState = dashboard;  // secret path to home  page
         } 
       }
       break;
@@ -164,9 +170,20 @@ void displayDashboard(error_conditions_t error)
   display.setCursor(0, 15);
   display.println(error_message_table[error].dashboardMsg);
   display.setCursor(0, 30);
-  display.println("< datalogger controls");
-  display.setCursor(0, 50);
-  display.println("< show live data");
+  if(no_error != error)
+  {
+    display.println("");
+    display.setCursor(0, 50);
+    display.println("< Details");
+  }
+  else
+  {
+    display.println("< Options");
+    display.setCursor(0, 50);
+    display.println("< Live Data");
+  }
+
+
   
   display.display();
   
@@ -208,14 +225,14 @@ void displayDetails(error_conditions_t error)
     display.setCursor(0, 13);
     display.print("Amb:");
     display.print(gSensors.ambientTemp);
-    display.print(" C     Plug:");
+    display.print(" C   Plug:");
     display.print(gSensors.plugTemp);
     display.println(" C");
    
     display.setCursor(0, 25);
     display.print("lPin:");
     display.print(gSensors.LRecepticalTemp);
-    display.print(" C   rPin:");
+    display.print(" C  rPin:");
     display.print(gSensors.RRecepticalTemp);
     display.println(" C");
     
@@ -226,7 +243,7 @@ void displayDetails(error_conditions_t error)
     display.println(gSensors.current);
     
     display.setCursor(0, 50);
-    display.print("< datalogger controls");
+    display.print("< Home");
     
   }
   
