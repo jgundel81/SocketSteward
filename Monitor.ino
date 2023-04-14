@@ -1,5 +1,5 @@
 /*
- *. Monito.ino
+ *. Monitor.ino
  */
 
 //Function Prototypes
@@ -11,8 +11,8 @@ double tempInCelcius(int adcVal);
 #define CURRENT_PIN A2
 #define AMBIENTTEMP_PIN A0
 
-int acVolt;
-int acCurr;
+
+
 
 //Structure to hold all Sensor information
 //This will most likely need to be modified.
@@ -30,22 +30,27 @@ typedef struct
 system_sensors_t gSensors;
 
 void GetValues(void)  {
+
   acVolt = analogRead(A1);  // read the ADC, channel for Vin
   acCurr = analogRead(A2);  // read the ADC, channel for Iin
   acPower.update(acVolt, acCurr);
-}
+ }
+
 
 void sensormonitor_task(void)
 {
+
   acPower.publish();
   gSensors.voltage = acPower.rmsVal1;
   gSensors.current = acPower.rmsVal2;
 
-  gSensors.ambientTemp = tempInCelcius(analogRead(AMBIENTTEMP_PIN));
+  TC.stopTimer();
   gSensors.plugTemp = tempInCelcius(analogRead(PLUGTEMP_PIN));
   gSensors.LRecepticalTemp = tempInCelcius(analogRead(LRECEPTICALTEMP_PIN));
   gSensors.RRecepticalTemp = tempInCelcius(analogRead(RRECEPTICALTEMP_PIN));
-  //Add Temperature Sampling/ Calculations and Storing
+  gSensors.ambientTemp = tempInCelcius(analogRead(AMBIENTTEMP_PIN));
+  TC.restartTimer(2000); // 2 msec 
+
 
   //Sample the other Sensors
 }
@@ -68,3 +73,26 @@ double tempInCelcius(int adcVal)
   temperature =(1/((1/T0) + ((1/B)*log(R/R0))) - 273.15)  ;
   return temperature;
 }
+
+float getVoltageDrop()
+{
+  float Val1,Val2,current;
+  aw.digitalWrite(RELAY_PIN_IO_EXPANDER, LOW);
+  acPower.publish();
+  delay(50);
+  acPower.publish();
+  Val1 = acPower.rmsVal1;
+  aw.digitalWrite(RELAY_PIN_IO_EXPANDER, HIGH);
+  delay(50);
+  acPower.publish();
+  Val2 = acPower.rmsVal1;
+  current = acPower.rmsVal2;
+  Serial.print("Current Through Resistor:");
+  Serial.println(current);
+
+  aw.digitalWrite(RELAY_PIN_IO_EXPANDER, LOW);
+  return (Val1 - Val2);
+
+}
+
+

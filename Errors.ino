@@ -26,7 +26,7 @@ typedef enum
   mrg_cap_confirmed,          //Marginal capacity confirmed
   load_prsnt_at_pwr,          //Load present at power
   ext_volt_dips_det,          //external volt DIPS detected
-  null,
+  sdcard_error,               //SD Card Error
   unknown_trip,
   NUM_OF_ERRORS     //This needs to be last 
 } error_conditions_t;
@@ -83,7 +83,7 @@ error_messages_t error_message_table[NUM_OF_ERRORS] = {
   {" mrg_cap_confirmed   ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//mrg_cap_confirmed
   {" load_prsnt_at_pwr   ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//load_prsnt_at_pwr
   {" ext_volt_dips_dect  ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//ext_volt_dips_dect
-  {" null                ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//Null  
+  {" SD Card Error       ", "    SD Card Error\r\nMake Sure SD Card\r\nInserted & Reset \r\n", },//No SD Card  
   {" Unknown Trip        ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", },//unknown_trip,
 };
 
@@ -107,7 +107,7 @@ ledErrorBlinkPattern_t error_led_table[NUM_OF_ERRORS] = {
   {{0,0},{0,0},{0,0}},//mrg_cap_confirmed,
   {{0,0},{0,0},{0,0}},//load_prsnt_at_pwr,
   {{0,0},{0,0},{0,0}},//ext_volt_dips_det,
-  {{0,0},{0,0},{0,0}},//null,      
+  {{0,0},{0,0},{0,0}},//sd card error,      
   {{0,0},{0,0},{0,0}},//unknown_trip,
 };
 
