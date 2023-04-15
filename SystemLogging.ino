@@ -20,7 +20,11 @@ void initSDCard(void) {
   if (! SD.begin(chipSelect))
   {
     Serial.println("Card failed, or not present");
-    
+
+  }
+  else
+  {
+     gSDCardInited = true;
   }
   else
   {
@@ -35,10 +39,16 @@ String msg = "";
 /*
 *   Function to set debug flag
 */
-void startLogging() {
+bool startLogging() {
+  if(false == gSDCardInited)
+  {
+    gCurrentError = sdcard_error;
+    return false;
+  }
   Serial.println("Start Logging");
   dataloggingEnabled = true;
   firstRun = true;
+  return true;
 }
 
 
@@ -174,8 +184,45 @@ void data_logging(void) {
       
       
     }
-
-    
-    
   }
 }
+
+bool system_log(String msg)
+{
+  if(false == gSDCardInited)
+  {
+    return false;
+  }
+
+   String fileName = "AlarmLog.txt";
+    
+   
+    File dataFile = SD.open(fileName, FILE_WRITE);  
+    // if the file is available, write to it:
+    if (dataFile) 
+    {
+      String dataString = "";
+      dataString += String(now.month());
+      dataString += "/";
+      dataString += String(now.day());
+      dataString += "/";
+      dataString += String(now.year());
+      dataString += ",";
+      dataString += String(now.hour());
+      dataString += ":";
+      dataString += String(now.minute());
+      dataString += ":";
+      dataString += String(now.second());
+      dataString += ":";
+      dataString += msg;
+      dataFile.println(dataString);
+      dataFile.close();
+      // print to the serial port too:
+      Serial.println(dataString);
+      return true;
+    }
+    Serial.print("Failed to write Log: ");
+    Serial.println(msg);
+    return false;
+}
+

@@ -11,7 +11,8 @@
 #include <Adafruit_AW9523.h>
 #include <math.h>
 #include <wiring_analog.h>
-#include <MicrocontrollerID.h>
+#include <Wire.h>
+#include "SAMD51_InterruptTimer.h"
 
 Adafruit_AW9523 aw;
 
@@ -22,14 +23,19 @@ DateTime dataLoggingStartedTime;
 char daysOfTheWeek[7][12] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 
 #define LED_PIN 13
+#define RELAY_PIN_IO_EXPANDER 13
 
 //Flag so the Button Thread can Start/Stop DataLogging
 
 bool dataloggingEnabled = false;
 bool firstRun = false;
 void startLogging();
-void stopLogging();
 
+void stopLogging();
+bool system_log(String msg);
+float getVoltageDrop();
+
+bool gSDCardInited = false;
 /********************* Scheduling Related Variables *************************/
 #define INTERVAL_ALWAYS 0
 #define INTERVAL_10ms 10
@@ -63,11 +69,11 @@ void GetValues(void);
 /*********    TASK Table (insert Tasks into Table **********************/
 static TaskType Tasks[] = {
   { INTERVAL_1000ms, 0, RTC_task },
-  { INTERVAL_1000ms, 0, blinkLED },
+  //{ INTERVAL_1000ms, 0, blinkLED },
   { INTERVAL_500ms, 0, display_task },
   { INTERVAL_10ms, 0, button_task },
-  { INTERVAL_10ms, 0, GetValues },
   { INTERVAL_100ms, 0, control_task },  //if changing control task, please also change static tick1 to maintain 3 second timer
+  //{ INTERVAL_10ms, 0, GetValues },
   { INTERVAL_500ms, 0, sensormonitor_task },
   { INTERVAL_100ms, 0, blinkpattern_task},
   { INTERVAL_1000ms, 0, data_logging},
@@ -82,8 +88,9 @@ TaskType *getTable(void) {
 
 Power acPower;  // create an instance of Power
 float VoltRange = 2000.00; // The full scale value is set to 5.00 Volts but can be changed when using an
-float acCurrRange = 130; // peak-to-peak current scaled down to 0-5V is 5A (=5/2*sqrt(2) = 1.77Arms max).
-
+float acCurrRange = 395.31; // peak-to-peak current scaled down to 0-5V is 5A (=5/2*sqrt(2) = 1.77Arms max).
+int acVolt;
+int acCurr;
 
 
 /*
@@ -114,11 +121,18 @@ void setup()
     while (1)
       ;
   }
+  aw.pinMode(RELAY_PIN_IO_EXPANDER, OUTPUT);
+  aw.digitalWrite(RELAY_PIN_IO_EXPANDER, LOW);
   acPower.begin(VoltRange, acCurrRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
   acPower.start(); //start measuring
-  //Serial.println("called acPower.begin() during setup()");
-  
-  
+
+  TC.startTimer(1000, GetValues); // 
+  delay(1000);
+  float val = getVoltageDrop();
+  Serial.print("Voltage Drop:");
+  Serial.println(val);
+  TC.restartTimer(2000); // 2 msec 
+
 
 
 }
@@ -135,7 +149,7 @@ void setup()
  */
 void loop() {
   for (taskIndex = 0; taskIndex < numOfTasks; taskIndex++) {
-  
+
     //Run primitive Scheduler
     if (0 == pTask[taskIndex].interval) {
       //run every loop

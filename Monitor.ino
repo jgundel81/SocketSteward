@@ -1,5 +1,5 @@
 /*
- *. Monito.ino
+ *. Monitor.ino
  */
 
 //Function Prototypes
@@ -11,8 +11,8 @@ double tempInCelcius(int adcVal);
 #define CURRENT_PIN A2
 #define AMBIENTTEMP_PIN A0
 
-int acVolt;
-int acCurr;
+
+
 
 //Structure to hold all Sensor information
 //This will most likely need to be modified.
@@ -33,22 +33,27 @@ typedef struct
 system_sensors_t gSensors;
 
 void GetValues(void)  {
+
   acVolt = analogRead(A1);  // read the ADC, channel for Vin
   acCurr = analogRead(A2);  // read the ADC, channel for Iin
   acPower.update(acVolt, acCurr);
-}
+ }
+
 
 void sensormonitor_task(void)
 {
+
   acPower.publish();
   gSensors.voltage = acPower.rmsVal1;
   gSensors.current = acPower.rmsVal2;
 
+  TC.stopTimer();
+  gSensors.plugTemp = tempInCelcius(analogRead(PLUGTEMP_PIN));
+  gSensors.LRecepticalTemp = tempInCelcius(analogRead(LRECEPTICALTEMP_PIN));
+  gSensors.RRecepticalTemp = tempInCelcius(analogRead(RRECEPTICALTEMP_PIN));
   gSensors.ambientTemp = tempInCelcius(analogRead(AMBIENTTEMP_PIN));
-  gSensors.plugTemp = tempInCelcius(analogRead(PLUGTEMP_PIN)) + gSensors.plugTempCorrection;
-  gSensors.LRecepticalTemp = tempInCelcius(analogRead(LRECEPTICALTEMP_PIN)) + gSensors.LRecepticalTempCorrection;
-  gSensors.RRecepticalTemp = tempInCelcius(analogRead(RRECEPTICALTEMP_PIN)) + gSensors.RRecepticalTempCorrection;
-  //Add Temperature Sampling/ Calculations and Storing
+  TC.restartTimer(2000); // 2 msec 
+
 
   //Sample the other Sensors
 }
@@ -72,41 +77,25 @@ double tempInCelcius(int adcVal)
   return temperature;
 }
 
-void readCalibrationData(void) 
+float getVoltageDrop()
 {
-  Serial.println("Starting readCalibrationData()");
-  
-  //get processor ID for reading calibration file that we don't want used on wrong processor
-  uint8_t uniqueID [16]; //https://github.com/smartmeio/microcontroller-id-library/blob/master/README.md
+  float Val1,Val2,current;
+  aw.digitalWrite(RELAY_PIN_IO_EXPANDER, LOW);
+  acPower.publish();
+  delay(50);
+  acPower.publish();
+  Val1 = acPower.rmsVal1;
+  aw.digitalWrite(RELAY_PIN_IO_EXPANDER, HIGH);
+  delay(50);
+  acPower.publish();
+  Val2 = acPower.rmsVal1;
+  current = acPower.rmsVal2;
+  Serial.print("Current Through Resistor:");
+  Serial.println(current);
 
-  MicroID.getUniqueID(uniqueID, 16);
+  aw.digitalWrite(RELAY_PIN_IO_EXPANDER, LOW);
+  return (Val1 - Val2);
 
-  char id [41];
-  MicroID.getUniqueIDString(id);
-  Serial.print("Device ID (string): ");
-  Serial.println(id);
-  //This should be stored in the calibration file at some point and verified  
-  String calibrationString="0,0,0,0";
-  
-  File calibrationFile = SD.open("SenCal.csv", FILE_READ);  
-  // if the file is available, read:
-  if (calibrationFile) {
-    char * csv_str = 0;
-    //CSV_Parser cp( csv_str,  true, ',');
-    
-    
-    
-    //calibrationString = calibrationFile.readStringUntil('\n');
-    
-    
-  }
-  else
-  {
-    Serial.println("error opening SenCal.csv");
-  }
-  Serial.println("calibratinString is ");
-  Serial.println(calibrationString);
-  calibrationFile.close();
-
-  
 }
+
+

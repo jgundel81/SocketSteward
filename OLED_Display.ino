@@ -61,6 +61,7 @@ void display_task(void) {
   }
 
 
+
   switch(gDisplayState)
   {
     case dashboard:  // labeled HOME
@@ -90,7 +91,17 @@ void display_task(void) {
         gButtonStatus.buttonPressed = false;
         if(BUTTON_A == gButtonStatus.button)
         {
-          gDisplayState = dashboard;
+            TC.stopTimer(); 
+            delay(10);
+            acPower.stop();
+            acPower.begin(VoltRange, acCurrRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
+            acPower.start(); //start measuring
+            TC.restartTimer(1000); // 
+            delay(1000);
+            float val = getVoltageDrop();
+            Serial.print("Voltage Drop:");
+            Serial.println(val);
+            TC.restartTimer(2000); // 2 msec 
         }
         else if(BUTTON_B == gButtonStatus.button)
         {
@@ -99,9 +110,12 @@ void display_task(void) {
           else
           {
             dataLoggingStartedTime = now;
-            startLogging();
 
-           // readCalibrationData();
+           if(false == startLogging())
+            {
+              gDisplayState = dashboard;
+            }
+
           }
         } 
         else if(BUTTON_C == gButtonStatus.button)
@@ -128,7 +142,7 @@ void display_task(void) {
         } 
         else if(BUTTON_C == gButtonStatus.button)
         {
-          gDisplayState = options;
+        gDisplayState = dashboard;  // secret path to home  page
         } 
       }
       break;
@@ -173,9 +187,20 @@ void displayDashboard(error_conditions_t error)
   display.setCursor(0, 15);
   display.println(error_message_table[error].dashboardMsg);
   display.setCursor(0, 30);
-  display.println("< datalogger controls");
-  display.setCursor(0, 50);
-  display.println("< show live data");
+  if(no_error != error)
+  {
+    display.println("");
+    display.setCursor(0, 50);
+    display.println("< Details");
+  }
+  else
+  {
+    display.println("< Options");
+    display.setCursor(0, 50);
+    display.println("< Live Data");
+  }
+
+
   
   display.display();
   
@@ -238,7 +263,7 @@ void displayDetails(error_conditions_t error)
 
     
     display.setCursor(0, 50);
-    dataString = "< cntrl ";
+    dataString = "< back  ";
     if(dataloggingEnabled)
     {
       dataString += "t0=";

@@ -25,6 +25,8 @@ sensor_trends_t gSensorTrend;
 // The EVENTS were coded without use of POWER STATUS. At this moment in April 13, 2023 I am using the new POWER STATUS to indicate the machine state, 
 // and the EVENTS to be what moves this state to another state. 
 // The UI messaging is presently all in the EVENTS table, but a table is expected to be created for text that describes the current state. 
+error_conditions_t previousError = no_error;
+
 void control_task(void)
 {
 
@@ -163,6 +165,7 @@ void logEvent(String messageText)
   }
 }
 
+// }
 
 void disconnectPower(void)
 {
@@ -176,4 +179,17 @@ void disconnectPower(void)
     logEvent("current > 1 @ " + String(gSensors.current));
     gPowerStatus = ERROR_IN_SYSTEM;
   }
+}
+    //only log error when it happens once
+    if(previousError != gCurrentError)
+    {
+      if(true == system_log(error_message_table[gCurrentError].dashboardMsg))
+      {
+         previousError = gCurrentError;
+      }
+    }
+
+
+
+
 }

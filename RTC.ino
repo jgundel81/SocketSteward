@@ -53,6 +53,7 @@ void RTC_task(void)
     RTCInited = true;
     initRTC();
   }
+
   //Set the Time from the RTC into Global now Variables
   now = rtc.now();
 }
