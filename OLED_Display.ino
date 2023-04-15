@@ -187,7 +187,7 @@ void displayDetails(error_conditions_t error)
   display.clearDisplay();
   display.setCursor(0, 0);
    display.println("Socket Steward  J4.12");
-   if(no_error != error)
+   if(!dataloggingEnabled && no_error != error)
   {
   display.println("                     ");
   display.println(error_message_table[error].detailedErrorMsg);

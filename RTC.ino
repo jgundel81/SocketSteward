@@ -36,8 +36,8 @@ void initRTC(void)
   }
   else
   {
-    Serial.println("RTC was running, but updating time to compile time because sometimes the date is wrong anyway."); //this should not have happened... but it did. Can't we use network time when USB is connected?
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));  // remove this one time use  force RTC time update?? 
+    Serial.println("RTC was running, but seting RTC time to compile time because we don't yet have a better way."); //this should not be needed... but it did. Can't we use network time when USB is connected?
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));  // remove this if we find a way to update RTC via network time on USB
   }
 }
 

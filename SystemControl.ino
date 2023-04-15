@@ -9,6 +9,17 @@
 void logEvent(String messageText);
 void disconnectPower(void);
 
+typedef struct
+{
+  float AVGambientTemp;
+  float AVGvoltage;
+  float AVGcurrent;
+  float AVGimpedance;
+  // Add the rest of the sensors to monitor here.
+} sensor_trends_t;
+
+sensor_trends_t gSensorTrend;
+
 
 // This control task is a spaghetti code state machine meant to handle actual event  processing and setting.
 // The EVENTS were coded without use of POWER STATUS. At this moment in April 13, 2023 I am using the new POWER STATUS to indicate the machine state, 
@@ -66,12 +77,23 @@ void control_task(void)
       
     
   }
-  else if (gSensors.voltage < 105){
+  else if (gSensors.voltage < 105){  // this can be a typical inrush situation with compressor loads in the home
+
+  // to distuinghish between 3rd party voltage dips and the attached appliance inrush current dips, they need to be separated. 
+  // if a dip follows the IR drop the attached appliance, then we focus on circuit impedance see https://docs.google.com/spreadsheets/d/1NpMZh3mdEe2BVCBC3MXAsRShZ2FT8-U_3JEMv86e1w4/edit#gid=793225366&range=O50 (story called VdropAlarm Math)
+
+    
+  
+
 
   }
- else if (gSensors.voltage < 125){
+ else if (gSensors.voltage < 125){  // in normal operating range... where 
     
   }
+
+
+
+
 
 
 
