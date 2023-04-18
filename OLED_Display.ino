@@ -13,6 +13,8 @@ Adafruit_SH1107 display = Adafruit_SH1107(64, 128, &Wire);
 
 #define OLED_BANNER "Socket Steward J4/16"
 
+void disconnectPower(void);
+
 typedef enum
 {
   dashboard,
@@ -100,7 +102,7 @@ void display_task(void) {
             acPower.start(); //start measuring
             TC.restartTimer(1000); // 
             delay(1000);
-            runImpedanceTest();
+            runImpedanceTest(UPDATE_gAnalysis_impedance);
             TC.restartTimer(2000); // 2 msec 
         }
         else if(BUTTON_B == gButtonStatus.button)
@@ -128,7 +130,7 @@ void display_task(void) {
       }
       break;
     case details:
-       displayDetails(gLatestEvent);
+      // displayDetails(gLatestEvent);  // removed for testing
       if(gButtonStatus.buttonPressed)
       {
         gButtonStatus.buttonPressed = false;
@@ -138,7 +140,7 @@ void display_task(void) {
         }
         else if(BUTTON_B == gButtonStatus.button)
         {
-         
+         disconnectPower();
         } 
         else if(BUTTON_C == gButtonStatus.button)
         {

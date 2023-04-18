@@ -76,6 +76,7 @@ void control_task(void) {
 
   // check for line undervolt. THe RMS ac voltage sensing is on the output of the AFGF disconnect relay.
   if (gSensors.voltage < 10) {
+    return;
     if (gPowerStatus == INITIALIZING) {  // no volts but just booted up. Might have been previously tripped and then power cycled.
       gLatestEvent = trp_no_indication;
       gPowerStatus = DISCONNECTED_AT_POWER_UP;
@@ -146,9 +147,9 @@ void writeEventLog(String messageText) {
   dataString += String(now.minute());
   dataString += ":";
   dataString += String(now.second());
-  dataString += "  EventID= ";
+  dataString += "  Event: ";
   dataString += String(gLatestEvent);
-  dataString += "  Resulting Power Status= ";
+  dataString += "  Status: ";
   dataString += String(gPowerStatus);
   if (messageText != "") {
     dataString += " ";

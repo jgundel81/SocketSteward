@@ -64,9 +64,11 @@ sensor_analysis_t gAnalysis;
 
 void GetValues(void) {
 
-  acVoltADC = analogRead(A1);            // read the ADC, channel for Vin WARNING: If accessing outside of ISR, declare as volitile
-  acCurrADC = analogRead(A2);            // read the ADC, channel for Iin
-  acPower.update(acVoltADC, acCurrADC);  //adds to the RMS array
+  acVoltADC = analogRead(A1); 
+  float filteredVoltADC = AmbientTempFilter.filter(acVoltADC);   // read the ADC, channel for Vin WARNING: If accessing outside of ISR, declare as volitile
+  acCurrADC = analogRead(A2);   
+  float filteredCurrentADC =          // read the ADC, channel for Iin
+  acPower.update(filteredVoltADC, acCurrADC);  //adds to the RMS array
 }
 
 

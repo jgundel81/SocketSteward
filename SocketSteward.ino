@@ -45,7 +45,7 @@ bool codeTracingEnabled = true;
 bool startCodeTracing();
 void writeEventLog(String messageText);  
 void stopLogging();
-float runImpedanceTest();
+float runImpedanceTest(bool flags);
 
 bool gSDCardInited = false;
 /********************* Scheduling Related Variables *************************/
@@ -55,6 +55,8 @@ bool gSDCardInited = false;
 #define INTERVAL_500ms 500
 #define INTERVAL_1000ms 1000
 #define INTERVAL_10S 10000
+
+#define UPDATE_gAnalysis_impedance true
 
 typedef struct _task {
   uint16_t interval;
@@ -176,7 +178,7 @@ void setup()
   
   TC.startTimer(1000, GetValues); // 
   delay(1000);
-  float val = runImpedanceTest();
+  float val = runImpedanceTest(UPDATE_gAnalysis_impedance);
   
   Serial.print("Impedance returned");
   Serial.println(val);
