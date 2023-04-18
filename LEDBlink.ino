@@ -36,7 +36,7 @@ void initLEDs() {
 
 
 
-void blinkpattern_task() {
+void blinkpattern_task() {     //SCHEDULED TO RUN EVERY 100 MS
   static bool isInited = false;
   static bool redState = false;
   static bool amberState = false;

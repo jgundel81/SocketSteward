@@ -3,6 +3,7 @@
 *    File to handle all Button Reading
 */
 
+
 typedef struct
 {
   bool buttonPressed;
@@ -23,12 +24,12 @@ void initButtons(void)
   pinMode(BUTTON_A, INPUT_PULLUP);
   pinMode(BUTTON_B, INPUT_PULLUP);
   pinMode(BUTTON_C, INPUT_PULLUP);
-  Serial.begin(9600);
+  // Serial.begin(115200); //seems duplicate to what is in SocketSteward.ino
 }
 
 /*
 *   Button task
-*   Gets called every 100ms
+*   Gets called every 10ms
 */ 
 void button_task(void)
 {
@@ -38,7 +39,7 @@ void button_task(void)
     ButtonsInited = true;
     initButtons();
   }
-
+  
 
   if(!digitalRead(BUTTON_A))
   {

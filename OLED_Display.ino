@@ -11,6 +11,8 @@ using namespace std;
 
 Adafruit_SH1107 display = Adafruit_SH1107(64, 128, &Wire);
 
+#define OLED_BANNER "Socket Steward J4/16"
+
 typedef enum
 {
   dashboard,
@@ -98,9 +100,7 @@ void display_task(void) {
             acPower.start(); //start measuring
             TC.restartTimer(1000); // 
             delay(1000);
-            float val = getVoltageDrop();
-            Serial.print("Voltage Drop:");
-            Serial.println(val);
+            runImpedanceTest();
             TC.restartTimer(2000); // 2 msec 
         }
         else if(BUTTON_B == gButtonStatus.button)
@@ -155,7 +155,7 @@ void displayOptions(error_conditions_t error)
 
   display.clearDisplay();
   display.setCursor(0, 0);
-  display.println("Socket Steward J4.12");  // use top row for future "more options button "
+  display.println(OLED_BANNER);  // use top row for future "more options button "
   display.println("                     ");
   display.setCursor(0, 15);
     if(dataloggingEnabled){
@@ -183,7 +183,7 @@ void displayDashboard(error_conditions_t error)
 
   display.clearDisplay();
   display.setCursor(0, 0);
-  display.println("Socket Steward J4.12");
+  display.println(OLED_BANNER);
   display.setCursor(0, 15);
   display.println(error_message_table[error].dashboardMsg);
   display.setCursor(0, 30);
@@ -211,7 +211,7 @@ void displayDetails(error_conditions_t error)
 
   display.clearDisplay();
   display.setCursor(0, 0);
-   display.println("Socket Steward  J4.12");
+   display.println(OLED_BANNER);
    if(!dataloggingEnabled && no_error != error)
   {
   display.println("                     ");

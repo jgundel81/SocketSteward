@@ -1,3 +1,4 @@
+
 /*
  *  SocketSteward.ino
  *  Main Entry
@@ -12,11 +13,15 @@
 #include <math.h>
 #include <wiring_analog.h>
 #include <Wire.h>
-#include "SAMD51_InterruptTimer.h"
+#include "SAMD51_InterruptTimer.h"  //https://github.com/Dennis-van-Gils/SAMD51_InterruptTimer/releases/tag/v1.1.1 download zip, and do Sketch>include library>add zip library
 
 Adafruit_AW9523 aw;
 
 #define RMS_WINDOW 50   // rms window of 50 samples, means 3 periods @60Hz
+#define INCLUDE_TIMESTAMP 0X01   //Used for writeTrace()
+#define INCLUDE_SENSORS 0X02
+#define INCLUDE_STATUS 0X04
+
 
 DateTime now;
 DateTime dataLoggingStartedTime;
@@ -24,16 +29,23 @@ char daysOfTheWeek[7][12] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thurs
 
 #define LED_PIN 13
 #define RELAY_PIN_IO_EXPANDER 13
+//Chip Select pin connected to SDCard
+
+const int chipSelect = 10;
+
 
 //Flag so the Button Thread can Start/Stop DataLogging
 
 bool dataloggingEnabled = false;
 bool firstRun = false;
-void startLogging();
+bool startLogging();
+bool codeTracingEnabled = true;
 
+
+bool startCodeTracing();
+void writeEventLog(String messageText);  
 void stopLogging();
-bool system_log(String msg);
-float getVoltageDrop();
+float runImpedanceTest();
 
 bool gSDCardInited = false;
 /********************* Scheduling Related Variables *************************/
@@ -69,13 +81,13 @@ void GetValues(void);
 /*********    TASK Table (insert Tasks into Table **********************/
 static TaskType Tasks[] = {
   { INTERVAL_1000ms, 0, RTC_task },
-  //{ INTERVAL_1000ms, 0, blinkLED },
+  //{ INTERVAL_1000ms, 0, blinkLED }, 
   { INTERVAL_500ms, 0, display_task },
   { INTERVAL_10ms, 0, button_task },
   { INTERVAL_100ms, 0, control_task },  //if changing control task, please also change static tick1 to maintain 3 second timer
   //{ INTERVAL_10ms, 0, GetValues },
   { INTERVAL_500ms, 0, sensormonitor_task },
-  { INTERVAL_100ms, 0, blinkpattern_task},
+  { INTERVAL_100ms, 0, blinkpattern_task}, //ISSUE WITH THIS? THE TASK SEEMS TO THINK IT RUNS EVERY MILLISECOND
   { INTERVAL_1000ms, 0, data_logging},
   
 };
@@ -85,12 +97,44 @@ const uint8_t numOfTasks = sizeof(Tasks) / sizeof(*Tasks);
 TaskType *getTable(void) {
   return Tasks;
 }
+/* create an instance of Power. Use volatile since is changed in ISR and accessed in background 
+*     https://www.cranesvarsity.com/volatile-keyword-in-c-c/ and https://github.com/khoih-prog/SAMD_TimerInterrupt
+*
+* volatile didn't work. 
+* error: passing 'volatile Power' as 'this' argument discards qualifiers [-fpermissive]
+  173 |   acPower.begin(VoltRange, acCurrRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
+*
+*
+*
+*
+*/
+Power acPower;  
+float VoltRange = 2000.00; // the peak to peak AC volts that fills the ADC input range (the AC input board clips due to poor choice of op amp not having rail to rail capability. The trim pot is turned way down to eliminate clipping at 130 volts)
+float acCurrRange = 132; // peak-to-peak current that fits the ADC input range 0 to 3.3v.
+int acVoltADC;  // add "volatile" if ever value is accessed outside the timer ISR
+int acCurrADC;
 
-Power acPower;  // create an instance of Power
-float VoltRange = 2000.00; // The full scale value is set to 5.00 Volts but can be changed when using an
-float acCurrRange = 395.31; // peak-to-peak current scaled down to 0-5V is 5A (=5/2*sqrt(2) = 1.77Arms max).
-int acVolt;
-int acCurr;
+
+/*
+*   SD Card Initialization Function 
+*
+*/
+void initSDCard(void) {
+  Serial.println(" Initializing SD card");
+
+  // see if the card is present and can be initialized:
+  if (! SD.begin(chipSelect))
+  {
+    writeEventLog("Card failed, or not present");
+
+  }
+  else
+  {
+    gSDCardInited = true;
+    Serial.println("Card initialized.");
+  }
+  
+}
 
 
 /*
@@ -102,9 +146,9 @@ int acCurr;
 void setup() 
 {
    pinMode(LED_PIN, OUTPUT);
-   Serial.begin(9600);
-   delay(4000);
-
+   Serial.begin(115200);
+   while(! Serial);
+   
 
   //Initialize GPIO Expander.
    if (!aw.begin(0x58))
@@ -115,6 +159,9 @@ void setup()
    {
      Serial.println("AW9523 GPOI Expander found, thank you");
    }
+   
+   initSDCard();
+
   pTask = getTable();
   if (NULL == pTask) {
     //Error
@@ -123,13 +170,15 @@ void setup()
   }
   aw.pinMode(RELAY_PIN_IO_EXPANDER, OUTPUT);
   aw.digitalWrite(RELAY_PIN_IO_EXPANDER, LOW);
+    
   acPower.begin(VoltRange, acCurrRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
   acPower.start(); //start measuring
-
+  
   TC.startTimer(1000, GetValues); // 
   delay(1000);
-  float val = getVoltageDrop();
-  Serial.print("Voltage Drop:");
+  float val = runImpedanceTest();
+  
+  Serial.print("Impedance returned");
   Serial.println(val);
   TC.restartTimer(2000); // 2 msec 
 

@@ -5,6 +5,11 @@
 */
 #include "RTClib.h"
 
+ // Briefly change SET_RTC to true if you want RTC clock to be updated to the compile time. 
+ // warning: Afterward, you MUST recompile and load immediately 
+ //  or else every reboot afterward  the RTC will be set  again to the now OLD compile time!
+#define SET_RTC false
+
 RTC_PCF8523 rtc;
 
 
@@ -21,7 +26,7 @@ void initRTC(void)
   }
 
   if (!rtc.initialized() || rtc.lostPower()) {
-    Serial.println("RTC is NOT initialized, let's set the time!");
+    Serial.println("RTC is NOT initialized, setting time to COMPILE TIME!");
     // When time needs to be set on a new device, or after a power loss, the
     // following line sets the RTC to the date & time this sketch was compiled
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
@@ -36,8 +41,10 @@ void initRTC(void)
   }
   else
   {
+    if(SET_RTC){
     Serial.println("RTC was running, but seting RTC time to compile time because we don't yet have a better way."); //this should not be needed... but it did. Can't we use network time when USB is connected?
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));  // remove this if we find a way to update RTC via network time on USB
+    }
   }
 }
 
