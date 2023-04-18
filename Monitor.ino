@@ -20,8 +20,12 @@ double tempInCelcius(int adcVal);
 
 #include <Ewma.h>  // uint32_t data filter
 
-Ewma AmbientTempFilter(0.1);  // Less smoothing - faster to detect changes, but more prone to noise
-Ewma LRTempFilter2(0.1);
+Ewma AmbientTempFilter(0.1);  // Less smoothing - faster to detect changes, but more prone to noise and can change later
+Ewma LTempFilter(0.1);
+Ewma RTempFilter(0.1);
+Ewma PlugTempFilter(0.1);
+Ewma VoltFilter(0.1);
+Ewma CurFilter(0.1);
 
 
 //Structure to hold all Sensor information
@@ -62,13 +66,10 @@ sensor_analysis_t gAnalysis;
 
 
 
-void GetValues(void) {
-
-  acVoltADC = analogRead(A1); 
-  float filteredVoltADC = AmbientTempFilter.filter(acVoltADC);   // read the ADC, channel for Vin WARNING: If accessing outside of ISR, declare as volitile
-  acCurrADC = analogRead(A2);   
-  float filteredCurrentADC =          // read the ADC, channel for Iin
-  acPower.update(filteredVoltADC, acCurrADC);  //adds to the RMS array
+void GetValues(void) { 
+  float filteredVoltADC = VoltFilter.filter(analogRead(A1)); // read the ADC, channel for Vin WARNING: If accessing outside of ISR, declare as volitile
+  float filteredCurrentADC = CurFilter.filter(analogRead(A2)); // read the ADC, channel for Iin
+  acPower.update(filteredVoltADC, filteredCurrentADC);  //adds to the RMS array
 }
 
 
@@ -79,10 +80,10 @@ void sensormonitor_task(void) {
   gSensors.current = acPower.rmsVal2;
 
   TC.stopTimer();
-  gSensors.plugTemp = tempInCelcius(analogRead(PLUGTEMP_PIN));
-  gSensors.LRecepticalTemp = tempInCelcius(analogRead(LRECEPTICALTEMP_PIN));
-  gSensors.RRecepticalTemp = tempInCelcius(analogRead(RRECEPTICALTEMP_PIN));
-  gSensors.ambientTemp = tempInCelcius(analogRead(AMBIENTTEMP_PIN));
+  gSensors.plugTemp = PlugTempFilter.filter(tempInCelcius(analogRead(PLUGTEMP_PIN)));
+  gSensors.LRecepticalTemp = LTempFilter.filter(tempInCelcius(analogRead(LRECEPTICALTEMP_PIN)));
+  gSensors.RRecepticalTemp = RTempFilter.filter(tempInCelcius(analogRead(RRECEPTICALTEMP_PIN)));
+  gSensors.ambientTemp = AmbientTempFilter.filter(tempInCelcius(analogRead(AMBIENTTEMP_PIN)));
   TC.restartTimer(2000);  // 2 msec
 
   //Sample the other Sensors

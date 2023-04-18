@@ -70,7 +70,6 @@ static uint8_t taskIndex = 0;
 
 /********************* Thread Prototypes used in table ***********************/
 void data_logging(void);
-void blinkLED(void);
 void display_task(void);
 void button_task(void);
 void sensormonitor_task(void);
@@ -83,7 +82,6 @@ void GetValues(void);
 /*********    TASK Table (insert Tasks into Table **********************/
 static TaskType Tasks[] = {
   { INTERVAL_1000ms, 0, RTC_task },
-  //{ INTERVAL_1000ms, 0, blinkLED }, 
   { INTERVAL_500ms, 0, display_task },
   { INTERVAL_10ms, 0, button_task },
   { INTERVAL_100ms, 0, control_task },  //if changing control task, please also change static tick1 to maintain 3 second timer
@@ -183,15 +181,8 @@ void setup()
   Serial.print("Impedance returned");
   Serial.println(val);
   TC.restartTimer(2000); // 2 msec 
-
-
-
 }
   
-
-
-
-
 /*
  *   Function Name: Loop 
  * 
@@ -210,20 +201,4 @@ void loop() {
       pTask[taskIndex].lastTick = millis();
     }
   }
-}
-
-
-/*
- *   Function Name: blinkLED 
- * 
- *   Description: Blinks LED 1000ms
- *   
- */
-void blinkLED(void) {
-  static bool ledState = false;
-  digitalWrite(LED_PIN, ledState);
-  if (ledState == true)
-    ledState = false;
-  else
-    ledState = true;
 }
