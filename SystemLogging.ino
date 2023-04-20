@@ -91,9 +91,9 @@ void data_logging(void) {
      
     String fileName = "";
     fileName += String(now.month());
-    fileName += "-";
+    
     fileName += String(now.day());
-    fileName += "-";
+   
     fileName += String(now.year());
     fileName += ".CSV";
    

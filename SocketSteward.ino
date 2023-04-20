@@ -99,8 +99,8 @@ int acCurr;
 void setup() 
 {
    pinMode(LED_PIN, OUTPUT);
-   Serial.begin(9600);
-   delay(5000);
+   Serial.begin(250000);
+  while(! Serial); // the delay() bothered me, hard to know how much was needed
 
   //Initialize GPIO Expander.
    if (! aw.begin(0x58))
