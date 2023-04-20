@@ -57,7 +57,7 @@ void control_task(void) {
       gPowerStatus = DISCONNECTED_BY_ALARM & ERROR_IN_SYSTEM_FLAG;
     }
 
-    writeEventLog("Warning: sensor(s) not providing valid data. System cannot do it's job. ");
+    //writeEventLog("Warning: sensor(s) not providing valid data. System cannot do it's job. ");
   }
 
   // Checking RTC battery

@@ -58,6 +58,7 @@ void writeTrace(String messageText, int flags)
 
   String dataString = String(millis());
   dataString += "\t";
+  
   if(flags && INCLUDE_TIMESTAMP){
     dataString += String(now.month());
     dataString += "/";
@@ -76,22 +77,25 @@ void writeTrace(String messageText, int flags)
     dataString += "\tStatus:";
     dataString += String(gPowerStatus);
   
-  
+    dataString += "\t";
+    dataString += String(messageText);
   
   
   if(flags && INCLUDE_SENSORS){
+    dataString += "\tADC#:";
+    dataString += String(countGetValues);
     dataString += "\tTa:";
-    dataString += String(gSensors.ambientTemp); 
+    dataString += String(gSensors.ambientTemp,1); //print with 1 decimal place
     dataString += "\tTl:";
-    dataString += String(gSensors.LRecepticalTemp);
+    dataString += String(gSensors.LRecepticalTemp,1);
     dataString += "\tTr:";
-    dataString += String(gSensors.RRecepticalTemp);
+    dataString += String(gSensors.RRecepticalTemp,1);
     dataString += "\tTp:";
-    dataString += String(gSensors.plugTemp);
+    dataString += String(gSensors.plugTemp,1);
     dataString += "\tv:";
-    dataString += String(gSensors.voltage);
+    dataString += String(gSensors.voltage,1);
     dataString += "\tI:";
-    dataString += String(gSensors.current);
+    dataString += String(gSensors.current,1);
     dataString += "\t";
   }
 

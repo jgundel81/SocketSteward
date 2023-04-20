@@ -130,7 +130,7 @@ void display_task(void) {
       }
       break;
     case details:
-      // displayDetails(gLatestEvent);  // removed for testing
+      displayDetails(gLatestEvent);  // removed for testing
       if(gButtonStatus.buttonPressed)
       {
         gButtonStatus.buttonPressed = false;
@@ -214,7 +214,7 @@ void displayDetails(error_conditions_t error)
   display.clearDisplay();
   display.setCursor(0, 0);
    display.println(OLED_BANNER);
-   if(!dataloggingEnabled && no_error != error)
+   if(false && !dataloggingEnabled && no_error != error)  //TEST CODE, REMOVE FALSE FROM CONDITION
   {
   display.println("                     ");
   display.println(error_message_table[error].detailedErrorMsg);
@@ -243,25 +243,25 @@ void displayDetails(error_conditions_t error)
    
     display.setCursor(0, 15);
     display.print("Ta ");
-    display.print(gSensors.ambientTemp);
+    display.print(gSensors.ambientTemp,1);
     display.print(" Tplug ");
     display.print(gSensors.plugTemp);
     
    
     display.setCursor(0, 26);
     display.print("TsL ");
-    display.print(gSensors.LRecepticalTemp);
+    display.print(gSensors.LRecepticalTemp,1);
     display.print(" TsR ");
-    display.print(gSensors.RRecepticalTemp);
+    display.print(gSensors.RRecepticalTemp,1);
     
     
     display.setCursor(0, 37);
    
     
     display.print("v=");
-    display.print(gSensors.voltage);
+    display.print(gSensors.voltage,1);
     display.print(" a=");
-    display.println(gSensors.current);
+    display.println(gSensors.current,1);
 
     
     display.setCursor(0, 50);

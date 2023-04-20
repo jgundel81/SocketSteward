@@ -16,16 +16,16 @@ double tempInCelcius(int adcVal);
 
 #define UPDATE_gAnalysis_impedance true
 
-
+int countGetValues = 0; // count ADC iterations
 
 #include <Ewma.h>  // uint32_t data filter
 
-Ewma AmbientTempFilter(0.1);  // Less smoothing - faster to detect changes, but more prone to noise and can change later
-Ewma LTempFilter(0.1);
-Ewma RTempFilter(0.1);
-Ewma PlugTempFilter(0.1);
-Ewma VoltFilter(0.1);
-Ewma CurFilter(0.1);
+Ewma AmbientTempFilter(0.01);  // 0.1 Less smoothing - faster to detect changes, but more prone to noise and can change later / 0.01 more smoothing
+Ewma LTempFilter(0.01);
+Ewma RTempFilter(0.01);
+Ewma PlugTempFilter(0.01);
+Ewma VoltFilter(0.01);
+Ewma CurFilter(0.01);
 
 
 //Structure to hold all Sensor information
@@ -70,11 +70,13 @@ void GetValues(void) {
   float filteredVoltADC = VoltFilter.filter(analogRead(A1)); // read the ADC, channel for Vin WARNING: If accessing outside of ISR, declare as volitile
   float filteredCurrentADC = CurFilter.filter(analogRead(A2)); // read the ADC, channel for Iin
   acPower.update(filteredVoltADC, filteredCurrentADC);  //adds to the RMS array
+  
+  ++countGetValues;
 }
 
 
 void sensormonitor_task(void) {
-  //writeTrace("head of sensormonitor_task()", INCLUDE_TIMESTAMP && INCLUDE_SENSORS && INCLUDE_STATUS );
+  writeTrace("mon", INCLUDE_SENSORS && INCLUDE_STATUS );
   acPower.publish();  //calculates the RMS values from the
   gSensors.voltage = acPower.rmsVal1;
   gSensors.current = acPower.rmsVal2;
@@ -86,7 +88,8 @@ void sensormonitor_task(void) {
   gSensors.ambientTemp = AmbientTempFilter.filter(tempInCelcius(analogRead(AMBIENTTEMP_PIN)));
   TC.restartTimer(2000);  // 2 msec
 
-  //Sample the other Sensors
+  writeTrace("ADC", INCLUDE_SENSORS && INCLUDE_STATUS );
+  
 }
 
 double B = 3380;     //Parameter of Thermistor
@@ -109,6 +112,7 @@ double tempInCelcius(int adcVal) {
 
 float runImpedanceTest(bool update_gAnalysis) {
   float I_underLoad, V_underLoad, R_underLoad;
+  writeTrace("R1", INCLUDE_SENSORS && INCLUDE_STATUS );
   
   aw.digitalWrite(RELAY_PIN_IO_EXPANDER, LOW);
   
@@ -117,6 +121,7 @@ float runImpedanceTest(bool update_gAnalysis) {
   acPower.publish();
   gSensors.voltage = acPower.rmsVal1;
   gSensors.current = acPower.rmsVal2;  // no load voltage
+  writeTrace("R2", INCLUDE_SENSORS && INCLUDE_STATUS );
   
   
   if (gSensors.current > MAX_APPLIANCE_AMPS_ALLOWED) {
@@ -127,11 +132,15 @@ float runImpedanceTest(bool update_gAnalysis) {
     {
       gAnalysis.impedance = gSensors.voltage / gSensors.current;
     }
+    writeTrace("R3", INCLUDE_SENSORS && INCLUDE_STATUS );
+  
     return gSensors.voltage / gSensors.current;
   
   }
   if (gSensors.voltage < 100) 
   {
+    writeTrace("R4", INCLUDE_SENSORS && INCLUDE_STATUS );
+  
     gLatestEvent = low_voltage;
     // gPowerStatus = // will let alarm task decide what the status is.
     Serial.println("Voltage to low, aborting runImpedanceTest()");

@@ -146,9 +146,10 @@ void initSDCard(void) {
 void setup() 
 {
    pinMode(LED_PIN, OUTPUT);
-   Serial.begin(115200);
+   Serial.begin(250000);
    while(! Serial);
-   
+   Serial.println("This is Socket Steward");
+   printf()
 
   //Initialize GPIO Expander.
    if (!aw.begin(0x58))
@@ -170,15 +171,18 @@ void setup()
   }
   aw.pinMode(RELAY_PIN_IO_EXPANDER, OUTPUT);
   aw.digitalWrite(RELAY_PIN_IO_EXPANDER, LOW);
-    
+  
+  writeTrace("RMS0", INCLUDE_SENSORS && INCLUDE_STATUS );
+   
   acPower.begin(VoltRange, acCurrRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
   acPower.start(); //start measuring
   
   TC.startTimer(1000, GetValues); // 
+
   delay(1000);
   float val = runImpedanceTest(UPDATE_gAnalysis_impedance);
   
-  Serial.print("Impedance returned");
+  Serial.print("Impedance returned was ");
   Serial.println(val);
   TC.restartTimer(2000); // 2 msec 
 }
@@ -191,7 +195,7 @@ void setup()
  */
 void loop() {
   for (taskIndex = 0; taskIndex < numOfTasks; taskIndex++) {
-
+    
     //Run primitive Scheduler
     if (0 == pTask[taskIndex].interval) {
       //run every loop
