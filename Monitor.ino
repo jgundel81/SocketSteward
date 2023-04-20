@@ -75,13 +75,23 @@ void GetValues(void) {
 }
 
 
+
+
 void sensormonitor_task(void) {
   writeTrace("mon", INCLUDE_SENSORS && INCLUDE_STATUS );
   acPower.publish();  //calculates the RMS values from the
   gSensors.voltage = acPower.rmsVal1;
   gSensors.current = acPower.rmsVal2;
 
-  TC.stopTimer();
+  if (gAnalysis.impedance != 0 && millis() < 7000)
+  {
+    float val = runImpedanceTest(UPDATE_gAnalysis_impedance);
+    Serial.print("Impedance returned was ");
+    Serial.println(val);
+  }
+  TC.restartTimer(2000); // 2 msec
+
+  TC.stopTimer(); 
   gSensors.plugTemp = PlugTempFilter.filter(tempInCelcius(analogRead(PLUGTEMP_PIN)));
   gSensors.LRecepticalTemp = LTempFilter.filter(tempInCelcius(analogRead(LRECEPTICALTEMP_PIN)));
   gSensors.RRecepticalTemp = RTempFilter.filter(tempInCelcius(analogRead(RRECEPTICALTEMP_PIN)));

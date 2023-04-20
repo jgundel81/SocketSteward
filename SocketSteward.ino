@@ -148,16 +148,18 @@ void setup()
    pinMode(LED_PIN, OUTPUT);
    Serial.begin(250000);
    while(! Serial);
-   Serial.println("This is Socket Steward");
-   printf()
+   Serial.print("This is Socket Steward sy millis() is ");
+   Serial.println(millis());
+ 
 
   //Initialize GPIO Expander.
+   
    if (!aw.begin(0x58))
    {
-    Serial.println("AW9523 GPIO Expander not found? Check wiring!");
-   }
-   else
-   {
+    Serial.println(" AW9523 didnt initialize at millis = ");
+    Serial.println(millis());
+     }
+   else{
      Serial.println("AW9523 GPOI Expander found, thank you");
    }
    
@@ -179,12 +181,8 @@ void setup()
   
   TC.startTimer(1000, GetValues); // 
 
-  delay(1000);
-  float val = runImpedanceTest(UPDATE_gAnalysis_impedance);
   
-  Serial.print("Impedance returned was ");
-  Serial.println(val);
-  TC.restartTimer(2000); // 2 msec 
+ 
 }
   
 /*
