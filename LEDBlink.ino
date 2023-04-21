@@ -7,10 +7,17 @@
 #define RED_LED_PIN 8
 #define AMBER_LED_PIN 9
 #define GREEN_LED_PIN 10
+#define AF_RECEPTACLE_SENSED_LED_PIN 0
+#define GF_RECEPTACLE_SENSED_LED_PIN 1
+#define GFI_TRIP_RELAY_PIN 12
+#define TEST_LOAD_RELAY_PIN 13
+#define WHITE_ALARM_LED_PIN 2
+
 
 
 
 void initLEDs() {
+
   aw.pinMode(RED_LED_PIN,OUTPUT);
   aw.pinMode(AMBER_LED_PIN,OUTPUT);
   aw.pinMode(GREEN_LED_PIN,OUTPUT);
@@ -25,7 +32,7 @@ void initLEDs() {
 
 
 
-void blinkpattern_task() {
+void blinkpattern_task() {     //SCHEDULED TO RUN EVERY 100 MS
   static bool isInited = false;
   static bool redState = false;
   static bool amberState = false;
@@ -40,11 +47,11 @@ void blinkpattern_task() {
   }
 
   //Red LED 
-  if(!((error_led_table[gCurrentError].red.onTime == 0)&&(error_led_table[gCurrentError].red.offTime == 0)))
+  if(!((error_led_table[gLatestEvent].red.onTime == 0)&&(error_led_table[gLatestEvent].red.offTime == 0)))
   {
     if (true == redState) 
     {
-      if (redTick >= error_led_table[gCurrentError].red.onTime) 
+      if (redTick >= error_led_table[gLatestEvent].red.onTime) 
       {
         aw.digitalWrite(RED_LED_PIN, HIGH);
         redTick = 0;
@@ -55,7 +62,7 @@ void blinkpattern_task() {
     } 
     else 
     {
-      if (redTick >= error_led_table[gCurrentError].red.offTime) 
+      if (redTick >= error_led_table[gLatestEvent].red.offTime) 
       {
         aw.digitalWrite(RED_LED_PIN, LOW);
         redTick = 0;
@@ -73,11 +80,11 @@ void blinkpattern_task() {
   }
 
   //Amber LED 
-  if(!((error_led_table[gCurrentError].amber.onTime == 0)&&(error_led_table[gCurrentError].amber.offTime == 0)))
+  if(!((error_led_table[gLatestEvent].amber.onTime == 0)&&(error_led_table[gLatestEvent].amber.offTime == 0)))
   {
     if (true == amberState) 
     {
-      if (amberTick >= error_led_table[gCurrentError].amber.onTime) 
+      if (amberTick >= error_led_table[gLatestEvent].amber.onTime) 
       {
         aw.digitalWrite(AMBER_LED_PIN, HIGH);
         amberTick = 0;
@@ -88,7 +95,7 @@ void blinkpattern_task() {
     } 
     else 
     {
-      if (amberTick >= error_led_table[gCurrentError].amber.offTime) 
+      if (amberTick >= error_led_table[gLatestEvent].amber.offTime) 
       {
         aw.digitalWrite(AMBER_LED_PIN, LOW);
         amberTick = 0;
@@ -106,11 +113,11 @@ void blinkpattern_task() {
   }
 
     //Green LED 
-  if(!((error_led_table[gCurrentError].green.onTime == 0)&&(error_led_table[gCurrentError].green.offTime == 0)))
+  if(!((error_led_table[gLatestEvent].green.onTime == 0)&&(error_led_table[gLatestEvent].green.offTime == 0)))
   {
     if (true == greenState) 
     {
-      if (greenTick >= error_led_table[gCurrentError].green.onTime) 
+      if (greenTick >= error_led_table[gLatestEvent].green.onTime) 
       {
         aw.digitalWrite(GREEN_LED_PIN, HIGH);
         greenTick = 0;
@@ -122,7 +129,7 @@ void blinkpattern_task() {
     } 
     else 
     {
-      if (greenTick >= error_led_table[gCurrentError].green.offTime) 
+      if (greenTick >= error_led_table[gLatestEvent].green.offTime) 
       {
         aw.digitalWrite(GREEN_LED_PIN, LOW);
         greenTick = 0;
