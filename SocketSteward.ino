@@ -136,10 +136,11 @@ void setup()
 {
    pinMode(LED_PIN, OUTPUT);
    Serial.begin(250000);
+
    while(! Serial);
    Serial.print("This is Socket Steward sy millis() is ");
    Serial.println(millis());
- 
+
 
   //Initialize GPIO Expander.
    
