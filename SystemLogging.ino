@@ -154,6 +154,12 @@ void data_logging(void) {
     initSDCard();
   }
 
+  // automatically process a change in event
+  if(gLatestEvent != gPreviousEvent){
+    gPreviousEvent = gLatestEvent;
+    ++event_count[gLatestEvent];
+    //processEvent(gLatestEvent);
+  }
 
   if (false == dataloggingEnabled) {
     return;

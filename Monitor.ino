@@ -18,16 +18,12 @@ double tempInCelcius(int adcVal);
 
 int countGetValues = 0; // count ADC iterations
 
+void disconnectPower(void);
+
 #include <Ewma.h>  // uint32_t data filter
-
-Ewma AmbientTempFilter(0.01);  // 0.1 Less smoothing - faster to detect changes, but more prone to noise and can change later / 0.01 more smoothing
-Ewma LTempFilter(0.01);
-Ewma RTempFilter(0.01);
-Ewma PlugTempFilter(0.01);
-Ewma VoltFilter(0.01);
-Ewma CurFilter(0.01);
-
-
+#define WATCH_IMPEDANCE_LEVEL      0.4             // 5% Vdrop DROP at 15 amps is R = 6 / 15 = 400 milliohms
+#define WARNING_IMPEDANCE_LEVEL    0.64             // 8% Vdrop is 640 milliohms
+#define UNACCEPTABLE_IMPEDANCE_LEVEL  0.8 
 //Structure to hold all Sensor information
 //This will most likely need to be modified.
 typedef struct
@@ -67,29 +63,44 @@ sensor_analysis_t gAnalysis;
 
 
 void GetValues(void) { 
-  float filteredVoltADC = VoltFilter.filter(analogRead(A1)); // read the ADC, channel for Vin WARNING: If accessing outside of ISR, declare as volitile
-  float filteredCurrentADC = CurFilter.filter(analogRead(A2)); // read the ADC, channel for Iin
-  acPower.update(filteredVoltADC, filteredCurrentADC);  //adds to the RMS array
+  acVoltADC = analogRead(A1);  // read the ADC, channel for Vin
+  acCurrADC = analogRead(A2);  // read the ADC, channel for Iin
+  acPower.update(acVoltADC, acCurrADC);
   
-  ++countGetValues;
+  //++countGetValues;
 }
 
 
 
+Ewma AmbientTempFilter(0.01);  // 0.1 = Less smoothing / 0.01 more smoothing
+Ewma LTempFilter(0.01);
+Ewma RTempFilter(0.01);
+Ewma PlugTempFilter(0.01);
+
+Ewma VoltFilter(0.1);   
+Ewma CurFilter(0.1);
+
 
 void sensormonitor_task(void) {
-  writeTrace("mon", INCLUDE_SENSORS && INCLUDE_STATUS );
-  acPower.publish();  //calculates the RMS values from the
+  //writeTrace("mon", INCLUDE_SENSORS && INCLUDE_STATUS );
+  acPower.publish();  //calculates the RMS values from the series stored in GetValues()
+  
+  
+  
   gSensors.voltage = acPower.rmsVal1;
   gSensors.current = acPower.rmsVal2;
 
-  if (gAnalysis.impedance != 0 && millis() < 7000)
+  /*
+  if (gAnalysis.impedance != 0 && millis() < 70)  // change the millis() comparison to a higher number if you want this to run 
   {
+    Serial.println("this is probably obsolete now");
     float val = runImpedanceTest(UPDATE_gAnalysis_impedance);
     Serial.print("Impedance returned was ");
     Serial.println(val);
   }
-  TC.restartTimer(2000); // 2 msec
+  */
+
+  // TC.restartTimer(2000); // 2 msec
 
   TC.stopTimer(); 
   gSensors.plugTemp = PlugTempFilter.filter(tempInCelcius(analogRead(PLUGTEMP_PIN)));
@@ -98,7 +109,7 @@ void sensormonitor_task(void) {
   gSensors.ambientTemp = AmbientTempFilter.filter(tempInCelcius(analogRead(AMBIENTTEMP_PIN)));
   TC.restartTimer(2000);  // 2 msec
 
-  writeTrace("ADC", INCLUDE_SENSORS && INCLUDE_STATUS );
+  //writeTrace("ADC", INCLUDE_SENSORS && INCLUDE_STATUS );
   
 }
 
@@ -126,7 +137,7 @@ float runImpedanceTest(bool update_gAnalysis) {
   
   aw.digitalWrite(RELAY_PIN_IO_EXPANDER, LOW);
   
-  acPower.publish();  //is this shorting out any acquisition already running?  an immediate restart the RMS sequence like we need?
+  acPower.publish();  //is this shorting out any acquisition already running?  an immediate restart the RMS sequence like we need? https://github.com/MartinStokroos/TrueRMS/blob/master/src/TrueRMS.cpp
   delay(50);          //shouldn't we use the acquire flag from impedance instead?
   acPower.publish();
   gSensors.voltage = acPower.rmsVal1;
@@ -156,7 +167,7 @@ float runImpedanceTest(bool update_gAnalysis) {
     Serial.println("Voltage to low, aborting runImpedanceTest()");
     return false;
   } 
-  if(true)
+  if(true)  // not yet aborted
   {
     aw.digitalWrite(RELAY_PIN_IO_EXPANDER, HIGH);  //turn on the load
     delay(50);
@@ -165,25 +176,61 @@ float runImpedanceTest(bool update_gAnalysis) {
     I_underLoad = acPower.rmsVal2;                // current under load
     aw.digitalWrite(RELAY_PIN_IO_EXPANDER, LOW);  //turn load back off
 
-    Serial.println("Voltage before:");
-    Serial.println(gSensors.voltage);
-    Serial.println("Voltage under load:");
-    Serial.println(V_underLoad);
+    Serial.print(" V before:");
+    Serial.print(gSensors.voltage,1);
+    Serial.print(" Vload:");
+    Serial.print(V_underLoad,1);
 
-    Serial.println("Current before:");
-    Serial.println(gSensors.current);
-    Serial.print("Current Through Resistor:");
-    Serial.println(I_underLoad);
+    Serial.print(" Current:");
+    Serial.print(gSensors.current,1);
+    Serial.print(" Current Through Resistor:");
+    Serial.print(I_underLoad,1);
 
-    Serial.println("impedance before:");
-    Serial.println(gSensors.voltage / gSensors.current);
+    Serial.print(" Impedance before:");
+    Serial.print(gSensors.voltage / gSensors.current,1);
 
     R_underLoad = V_underLoad / I_underLoad;
-    Serial.println("Impedance under load:");
-    Serial.println(R_underLoad);
+    Serial.print("  Impedance after:");
+    Serial.println(R_underLoad,1);
+
+    if(I_underLoad < MAX_APPLIANCE_AMPS_ALLOWED){
+      // dummy load AND appliance load all too low for some reason.
+      gLatestEvent = test_load_error;
+      gPowerStatus |= ERROR_IN_SYSTEM_FLAG; 
+      Serial.println("Current during impedance test was below expected test current. ");
+      return false;
+    } 
+
     if(update_gAnalysis == UPDATE_gAnalysis_impedance) 
     {
-      gAnalysis.impedance = V_underLoad / I_underLoad;
+      if(R_underLoad > 50){
+        Serial.println("Calculated resistance makes no sense because we should have caught it already");
+      }
+      else{
+        gAnalysis.impedance = R_underLoad;
+        if(R_underLoad < WATCH_IMPEDANCE_LEVEL ){
+          gPowerStatus = CONNECTED_W_NORMAL_FLAG; // this overwrites any other flags. 
+          gLatestEvent = full_cap_confirmed;
+        }
+        else if(R_underLoad < WARNING_IMPEDANCE_LEVEL){
+          gPowerStatus = CONNECTED_W_WATCH_FLAG; // this overwrites any other flags. 
+          gLatestEvent = mrg_cap_confirmed;
+
+        }
+        else if(R_underLoad < UNACCEPTABLE_IMPEDANCE_LEVEL){
+          // NEED SOME TREND MONITORING HERE TO SEE IF IMPEDANCE IS CLIMBING
+          gPowerStatus = CONNECTED_W_WARNING_FLAG; // this overwrites any other flags. 
+          gLatestEvent = mrg_cap_confirmed;
+        }
+        else {
+          disconnectPower();
+          gPowerStatus = CONNECTED_W_WARNING_FLAG; // this overwrites any other flags. 
+          gLatestEvent = mrg_cap_confirmed;
+          
+
+        }
+      }
+      
     }
     return R_underLoad;
   }

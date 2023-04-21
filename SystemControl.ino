@@ -11,10 +11,21 @@ wirenut 6.55
 14 ga
 */
 
+#define LEVER_SPLICE_MILLIOHMS 21               //https://drive.google.com/file/d/1aKQNRFilk3AV42mCHJ-DNqQHri_0caNR/view?usp=sharing
+#define GA14_CABLE_MILLIOHMS_PER_FOOT 4.8         // 4.8  https://drive.google.com/file/d/1aKQNRFilk3AV42mCHJ-DNqQHri_0caNR/view?usp=sharing 
+                                                // at 30 ft cable + 8 receptacles (16 lever nuts) an exemplar circuit impedance would be 30 * 4.8 + 16 * 21 = 480 millohms
+                                                // But assuming that unit is at the end of the line means it won't catch a too high impedance at the beginning at 144 milliohms
+                                                // a future user input could define if the outlet is "close" OR "far" from the fuse box. 
+#define WATCH_IMPEDANCE_LEVEL      0.4             // 5% Vdrop DROP at 15 amps is R = 6 / 15 = 400 milliohms
+#define WARNING_IMPEDANCE_LEVEL    0.64             // 8% Vdrop is 640 milliohms
+#define UNACCAPTABLE_IMPEDANCE_LEVEL  0.8          // 10% Vdrop DROP at 15 amps is R = 12 / 15 = 800 milliohms
 
+#define UPDATE_gAnalysis_impedance true
 #define INCLUDE_TIMESTAMP 0X01
 #define INCLUDE_SENSORS 0X02
 #define INCLUDE_STATUS 0X04
+
+void disconnectPower(void);
 
 //Prototypes
 void writeEventLog(String messageText);
@@ -39,6 +50,7 @@ sensor_trends_t gSensorTrend;
 void control_task(void) {
   //writeTrace("head of control_task()", INCLUDE_TIMESTAMP && INCLUDE_SENSORS && INCLUDE_STATUS );
   static uint32_t tick1 = 0;  //used for waiting when a pending AFGF pulse code might arrive.
+  static uint32_t dipTick = 0; // measuring dips
 
 
   //Add some logic here to declare an event and set gPowerStatus.
@@ -74,9 +86,9 @@ void control_task(void) {
 
   // VOLTAGE ANALYSIS
 
-  // check for line undervolt. THe RMS ac voltage sensing is on the output of the AFGF disconnect relay.
+  // check for NO VOLTAGE (thus AFGF is tripped and attached appliance power is disconnected)
   if (gSensors.voltage < 10) {
-    return;
+    
     if (gPowerStatus == INITIALIZING) {  // no volts but just booted up. Might have been previously tripped and then power cycled.
       gLatestEvent = trp_no_indication;
       gPowerStatus = DISCONNECTED_AT_POWER_UP;
@@ -101,9 +113,12 @@ void control_task(void) {
       }
       
     }
-  } else if (gSensors.voltage < 90) {  // This could be a serioous voltage dip, need to add code for voltage dip analysis 
+  
+  
+  
+  } else if (gSensors.voltage < 90) {  // This could be a serious voltage dip, need to add code for voltage dip analysis 
     gLatestEvent = low_voltage;
-    gPowerStatus = CONNECTED_WARNING_FLAG;
+    gPowerStatus = CONNECTED_W_WARNING_FLAG;
     writeEventLog("Voltage dipped below 90, suggesting high resistance ");
     
 
@@ -118,8 +133,10 @@ void control_task(void) {
 
   } else if (gSensors.voltage < 125) {  // in normal operating range... where
     if(gPowerStatus && CONNECTED_ANY_FLAG){
-      // Was not connected, needs to be connected and have impedance calculated
-      runImpedanceTest(UPDATE_gAnalysis_impedance);
+      // this is the normal state with appropriate voltages
+      
+      
+      // runImpedanceTest(UPDATE_gAnalysis_impedance);  put this in if there was a disconnect event and this is freshly connected but not at boot time??
     }
     
   }
@@ -131,9 +148,17 @@ void control_task(void) {
 
 // END control task
 
+//void processEvent(error_conditions_t error){
+  // this is automatically called if there is an event change 
+  // first write the text from the error message table to the event log
+  // second say something out the speaker if a file exists for that event, files are the third column of the error message table
 
+//}
 
 void writeEventLog(String messageText) {
+  
+  
+  
   String dataString = "";
 
   dataString += String(now.month());
@@ -189,7 +214,13 @@ void disconnectPower(void) {
   aw.digitalWrite(GFI_TRIP_RELAY_PIN, HIGH);
   delay(200);  // need to confirm how long it will take to trip a GF circuit
   aw.digitalWrite(GFI_TRIP_RELAY_PIN, LOW);
-  // FORCE A NEW RMS UPDATE HERE 
+   aw.digitalWrite(RELAY_PIN_IO_EXPANDER, LOW);
+  
+  acPower.publish();  //is this shorting out any acquisition already running?  an immediate restart the RMS sequence like we need? https://github.com/MartinStokroos/TrueRMS/blob/master/src/TrueRMS.cpp
+  delay(50);          //shouldn't we use the acquire flag from impedance instead?
+  acPower.publish();
+  gSensors.voltage = acPower.rmsVal1;
+  gSensors.current = acPower.rmsVal2;  // no load 
   if (gSensors.voltage > 10 || gSensors.current > 1) {
     writeEventLog("disconnectPower() failed to interrupt power via GF Trip relay. Check relay and trip resistor wiring.");
     writeEventLog("voltage > 10 @ " + String(gSensors.voltage));

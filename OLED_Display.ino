@@ -7,11 +7,12 @@
 #include <Adafruit_SH110X.h>
 //#include <vector>
 //#include <CSV_Parser.h> // Install CSV Parser Library (present in Arduino IDE library manager)
-using namespace std;
+//using namespace std;  //jamie commented this. Why is it here?
 
 Adafruit_SH1107 display = Adafruit_SH1107(64, 128, &Wire);
 
-#define OLED_BANNER "Socket Steward J4/16"
+#define OLED_BANNER "Socket Steward J4/20"
+#define UPDATE_gAnalysis_impedance true
 
 void disconnectPower(void);
 
@@ -102,8 +103,10 @@ void display_task(void) {
             acPower.start(); //start measuring
             TC.restartTimer(1000); // 
             delay(1000);
+            Serial.println("impedance test from button A");
             runImpedanceTest(UPDATE_gAnalysis_impedance);
             TC.restartTimer(2000); // 2 msec 
+            gButtonStatus.button = BUTTON_C; // stop looping this!
         }
         else if(BUTTON_B == gButtonStatus.button)
         {
@@ -112,8 +115,7 @@ void display_task(void) {
           else
           {
             dataLoggingStartedTime = now;
-
-           if(false == startLogging())
+            if(false == startLogging())
             {
               gDisplayState = dashboard;
             }
@@ -130,7 +132,7 @@ void display_task(void) {
       }
       break;
     case details:
-      displayDetails(gLatestEvent);  // removed for testing
+      displayDetails(gLatestEvent);  
       if(gButtonStatus.buttonPressed)
       {
         gButtonStatus.buttonPressed = false;
@@ -144,7 +146,7 @@ void display_task(void) {
         } 
         else if(BUTTON_C == gButtonStatus.button)
         {
-        gDisplayState = dashboard;  // secret path to home  page
+        gDisplayState = dashboard;  
         } 
       }
       break;
@@ -214,10 +216,10 @@ void displayDetails(error_conditions_t error)
   display.clearDisplay();
   display.setCursor(0, 0);
    display.println(OLED_BANNER);
-   if(false && !dataloggingEnabled && no_error != error)  //TEST CODE, REMOVE FALSE FROM CONDITION
+   if(!dataloggingEnabled && no_error != error)  //TEST CODE, REMOVE FALSE FROM CONDITION
   {
   display.println("                     ");
-  display.println(error_message_table[error].detailedErrorMsg);
+  display.println(error_message_table[error].detailedErrorMsg); 
   display.println("                     ");
   display.println("< home               ");
   display.println("                     ");

@@ -24,7 +24,7 @@ void initButtons(void)
   pinMode(BUTTON_A, INPUT_PULLUP);
   pinMode(BUTTON_B, INPUT_PULLUP);
   pinMode(BUTTON_C, INPUT_PULLUP);
-  // Serial.begin(115200); //seems duplicate to what is in SocketSteward.ino
+  Serial.begin(250000); //seems duplicate to what is in SocketSteward.ino
 }
 
 /*

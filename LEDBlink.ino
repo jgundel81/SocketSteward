@@ -20,7 +20,7 @@ void initLEDs() {
   aw.pinMode(RED_LED_PIN, OUTPUT);
   aw.pinMode(AMBER_LED_PIN, OUTPUT);
   aw.pinMode(GREEN_LED_PIN, OUTPUT);
-  aw.pinMode(GFI_TRIP_RELAY_PIN, OUTPUT);
+  aw.pinMode(GFI_TRIP_RELAY_PIN, OUTPUT);  //this should be the LED current drive version
   aw.pinMode(TEST_LOAD_RELAY_PIN, OUTPUT);
   aw.pinMode(WHITE_ALARM_LED_PIN, OUTPUT);
   aw.pinMode(AF_RECEPTACLE_SENSED_LED_PIN, INPUT);

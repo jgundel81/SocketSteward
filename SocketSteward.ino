@@ -39,7 +39,7 @@ const int chipSelect = 10;
 bool dataloggingEnabled = false;
 bool firstRun = false;
 bool startLogging();
-bool codeTracingEnabled = true;
+bool codeTracingEnabled = false;
 
 
 bool startCodeTracing();
@@ -85,9 +85,8 @@ static TaskType Tasks[] = {
   { INTERVAL_500ms, 0, display_task },
   { INTERVAL_10ms, 0, button_task },
   { INTERVAL_100ms, 0, control_task },  //if changing control task, please also change static tick1 to maintain 3 second timer
-  //{ INTERVAL_10ms, 0, GetValues },
   { INTERVAL_500ms, 0, sensormonitor_task },
-  { INTERVAL_100ms, 0, blinkpattern_task}, //ISSUE WITH THIS? THE TASK SEEMS TO THINK IT RUNS EVERY MILLISECOND
+  { INTERVAL_100ms, 0, blinkpattern_task}, 
   { INTERVAL_1000ms, 0, data_logging},
   
 };
@@ -97,20 +96,10 @@ const uint8_t numOfTasks = sizeof(Tasks) / sizeof(*Tasks);
 TaskType *getTable(void) {
   return Tasks;
 }
-/* create an instance of Power. Use volatile since is changed in ISR and accessed in background 
-*     https://www.cranesvarsity.com/volatile-keyword-in-c-c/ and https://github.com/khoih-prog/SAMD_TimerInterrupt
-*
-* volatile didn't work. 
-* error: passing 'volatile Power' as 'this' argument discards qualifiers [-fpermissive]
-  173 |   acPower.begin(VoltRange, acCurrRange, RMS_WINDOW, ADC_10BIT, BLR_ON, CNT_SCAN);
-*
-*
-*
-*
-*/
+
 Power acPower;  
 float VoltRange = 2000.00; // the peak to peak AC volts that fills the ADC input range (the AC input board clips due to poor choice of op amp not having rail to rail capability. The trim pot is turned way down to eliminate clipping at 130 volts)
-float acCurrRange = 132; // peak-to-peak current that fits the ADC input range 0 to 3.3v.
+float acCurrRange = 500; // peak-to-peak current that fits the ADC input range 0 to 3.3v.
 int acVoltADC;  // add "volatile" if ever value is accessed outside the timer ISR
 int acCurrADC;
 
@@ -156,7 +145,7 @@ void setup()
    
    if (!aw.begin(0x58))
    {
-    Serial.println(" AW9523 didnt initialize at millis = ");
+    Serial.print(" AW9523 didnt initialize at millis = ");
     Serial.println(millis());
      }
    else{
@@ -180,6 +169,11 @@ void setup()
   acPower.start(); //start measuring
   
   TC.startTimer(1000, GetValues); // 
+  delay(1000);
+  float val = runImpedanceTest(UPDATE_gAnalysis_impedance);
+  Serial.print("ran Voltage Drop in startup:");
+  Serial.println(val);
+  TC.restartTimer(2000); // 2 msec 
 
   
  
