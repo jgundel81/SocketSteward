@@ -11,9 +11,9 @@
 
 
 void initLEDs() {
-  aw.pinMode(RED_LED_PIN, OUTPUT);
-  aw.pinMode(AMBER_LED_PIN, OUTPUT);
-  aw.pinMode(GREEN_LED_PIN, OUTPUT);
+  aw.pinMode(RED_LED_PIN,OUTPUT);
+  aw.pinMode(AMBER_LED_PIN,OUTPUT);
+  aw.pinMode(GREEN_LED_PIN,OUTPUT);
 
   //Active Low
   aw.digitalWrite(RED_LED_PIN, HIGH);
