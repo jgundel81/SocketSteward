@@ -14,22 +14,23 @@
 #define WHITE_ALARM_LED_PIN 2
 
 
-
+//Remember active low so higher number is dimmer
+#define LED_DIM_LEVEL 100
+//0-255 Value for 0-100%
 
 void initLEDs() {
-  aw.pinMode(RED_LED_PIN, OUTPUT);
-  aw.pinMode(AMBER_LED_PIN, OUTPUT);
-  aw.pinMode(GREEN_LED_PIN, OUTPUT);
+  aw.pinMode(RED_LED_PIN, AW9523_LED_MODE);
+  aw.pinMode(AMBER_LED_PIN, AW9523_LED_MODE);
+  aw.pinMode(GREEN_LED_PIN, AW9523_LED_MODE);
   aw.pinMode(GFI_TRIP_RELAY_PIN, OUTPUT);  //this should be the LED current drive version
   aw.pinMode(TEST_LOAD_RELAY_PIN, OUTPUT);
   aw.pinMode(WHITE_ALARM_LED_PIN, OUTPUT);
   aw.pinMode(AF_RECEPTACLE_SENSED_LED_PIN, INPUT);
   aw.pinMode(GF_RECEPTACLE_SENSED_LED_PIN, INPUT);
 
-  //Active Low
-  aw.digitalWrite(RED_LED_PIN, HIGH);
-  aw.digitalWrite(AMBER_LED_PIN, HIGH);
-  aw.digitalWrite(GREEN_LED_PIN, HIGH);
+  aw.analogWrite(RED_LED_PIN, 0);
+  aw.analogWrite(AMBER_LED_PIN, 0);
+  aw.analogWrite(GREEN_LED_PIN, 0);
 }
 
 
@@ -57,30 +58,28 @@ void blinkpattern_task() {     //SCHEDULED TO RUN EVERY 100 MS
     {
       if (redTick >= error_led_table[gLatestEvent].red.onTime) 
       {
-        aw.digitalWrite(RED_LED_PIN, HIGH);
+        aw.analogWrite(RED_LED_PIN, 0);
         redTick = 0;
         redState = false;
       }
       else
-        aw.digitalWrite(RED_LED_PIN, LOW);
+        aw.analogWrite(RED_LED_PIN, LED_DIM_LEVEL);
     } 
     else 
     {
       if (redTick >= error_led_table[gLatestEvent].red.offTime) 
       {
-        aw.digitalWrite(RED_LED_PIN, LOW);
+        aw.analogWrite(RED_LED_PIN, LED_DIM_LEVEL);
         redTick = 0;
         redState = true;
       }
       else
-        aw.digitalWrite(RED_LED_PIN, HIGH);
+        aw.analogWrite(RED_LED_PIN, 0);
     }
   }
   else
   {
-    aw.digitalWrite(RED_LED_PIN, HIGH);
-    aw.digitalWrite(AMBER_LED_PIN, HIGH);
-    aw.digitalWrite(GREEN_LED_PIN, HIGH);
+    aw.analogWrite(RED_LED_PIN, 0);
   }
 
   //Amber LED 
@@ -90,30 +89,28 @@ void blinkpattern_task() {     //SCHEDULED TO RUN EVERY 100 MS
     {
       if (amberTick >= error_led_table[gLatestEvent].amber.onTime) 
       {
-        aw.digitalWrite(AMBER_LED_PIN, HIGH);
+        aw.analogWrite(AMBER_LED_PIN, 0);
         amberTick = 0;
         amberState = false;
       }
       else
-        aw.digitalWrite(AMBER_LED_PIN, LOW);
+        aw.analogWrite(AMBER_LED_PIN, LED_DIM_LEVEL);
     } 
     else 
     {
       if (amberTick >= error_led_table[gLatestEvent].amber.offTime) 
       {
-        aw.digitalWrite(AMBER_LED_PIN, LOW);
+        aw.analogWrite(AMBER_LED_PIN, LED_DIM_LEVEL);
         amberTick = 0;
         amberState = true;
       }
       else
-        aw.digitalWrite(AMBER_LED_PIN, HIGH);
+        aw.analogWrite(AMBER_LED_PIN, 0);
     }
   }
   else
   {
-    aw.digitalWrite(RED_LED_PIN, HIGH);
-    aw.digitalWrite(AMBER_LED_PIN, HIGH);
-    aw.digitalWrite(GREEN_LED_PIN, HIGH);
+    aw.analogWrite(AMBER_LED_PIN, 0);
   }
 
     //Green LED 
@@ -123,32 +120,30 @@ void blinkpattern_task() {     //SCHEDULED TO RUN EVERY 100 MS
     {
       if (greenTick >= error_led_table[gLatestEvent].green.onTime) 
       {
-        aw.digitalWrite(GREEN_LED_PIN, HIGH);
+        aw.analogWrite(GREEN_LED_PIN, 0);
         greenTick = 0;
         greenState = false;
         
       }
       else
-        aw.digitalWrite(GREEN_LED_PIN, LOW);
+        aw.analogWrite(GREEN_LED_PIN, LED_DIM_LEVEL);
     } 
     else 
     {
       if (greenTick >= error_led_table[gLatestEvent].green.offTime) 
       {
-        aw.digitalWrite(GREEN_LED_PIN, LOW);
+        aw.analogWrite(GREEN_LED_PIN, LED_DIM_LEVEL);
         greenTick = 0;
         greenState = true;
         
       }
       else
-        aw.digitalWrite(GREEN_LED_PIN, HIGH);
+        aw.analogWrite(GREEN_LED_PIN, 0);
     }
   }
   else
   {
-    aw.digitalWrite(RED_LED_PIN, HIGH);
-    aw.digitalWrite(AMBER_LED_PIN, HIGH);
-    aw.digitalWrite(GREEN_LED_PIN, HIGH);
+        aw.analogWrite(GREEN_LED_PIN, 0);
   }
 
 

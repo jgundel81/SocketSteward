@@ -14,6 +14,7 @@
 #include <wiring_analog.h>
 #include <Wire.h>
 #include "SAMD51_InterruptTimer.h"  //https://github.com/Dennis-van-Gils/SAMD51_InterruptTimer/releases/tag/v1.1.1 download zip, and do Sketch>include library>add zip library
+#include <Ewma.h>  // uint32_t data filter
 
 Adafruit_AW9523 aw;
 
@@ -51,6 +52,8 @@ bool gSDCardInited = false;
 /********************* Scheduling Related Variables *************************/
 #define INTERVAL_ALWAYS 0
 #define INTERVAL_10ms 10
+#define INTERVAL_50ms 50
+
 #define INTERVAL_100ms 100
 #define INTERVAL_500ms 500
 #define INTERVAL_1000ms 1000
@@ -76,6 +79,8 @@ void sensormonitor_task(void);
 void RTC_task(void);
 void control_task(void);
 void blinkpattern_task(void);
+void GFCI_AFCI_task(void);
+
 void GetValues(void);
 
 
@@ -87,6 +92,8 @@ static TaskType Tasks[] = {
   { INTERVAL_100ms, 0, control_task },  //if changing control task, please also change static tick1 to maintain 3 second timer
   { INTERVAL_500ms, 0, sensormonitor_task },
   { INTERVAL_100ms, 0, blinkpattern_task}, 
+  { INTERVAL_50ms,  0, GFCI_AFCI_task},
+
   { INTERVAL_1000ms, 0, data_logging},
   
 };

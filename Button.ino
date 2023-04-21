@@ -34,6 +34,8 @@ void initButtons(void)
 void button_task(void)
 {
   static bool ButtonsInited = false;
+
+   
   if(false == ButtonsInited)
   {
     ButtonsInited = true;
@@ -73,6 +75,7 @@ void button_task(void)
     gButtonStatus.button = BUTTON_C;
     gButtonStatus.buttonPressed = true;
     Serial.println("ButtonC");
-    
   }
+
+
 }

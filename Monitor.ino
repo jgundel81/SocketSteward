@@ -20,7 +20,7 @@ int countGetValues = 0; // count ADC iterations
 
 void disconnectPower(void);
 
-#include <Ewma.h>  // uint32_t data filter
+
 #define WATCH_IMPEDANCE_LEVEL      0.4             // 5% Vdrop DROP at 15 amps is R = 6 / 15 = 400 milliohms
 #define WARNING_IMPEDANCE_LEVEL    0.64             // 8% Vdrop is 640 milliohms
 #define UNACCEPTABLE_IMPEDANCE_LEVEL  0.8 
@@ -37,6 +37,8 @@ typedef struct
   float plugTempCorrection;
   float voltage;
   float current;
+  bool gfciTrip;
+  uint8_t afciBlinks;
   // Add the rest of the sensors to monitor here.
 } system_sensors_t;
 
@@ -234,4 +236,60 @@ float runImpedanceTest(bool update_gAnalysis) {
     }
     return R_underLoad;
   }
+}
+
+void GFCI_AFCI_task(void)
+{
+  static bool PrevGFCIState = false;
+  static bool PrevAFCIState = false;
+  static long long lastTick = millis();
+  static uint8_t counter = 0;
+ /* if GFCI Blinks at all it is tripped.
+    Only trip once need to power off to reset */
+  if(HIGH == aw.digitalRead(GF_RECEPTACLE_SENSED_LED_PIN))
+  {
+    if(false == PrevGFCIState)
+    {
+       PrevGFCIState = true;
+       Serial.println("GFCI trip");
+       gSensors.gfciTrip = true;
+    }
+  }
+  else if(false == gSensors.gfciTrip)
+  {
+    PrevGFCIState = false;
+  }
+
+  if(HIGH == aw.digitalRead(AF_RECEPTACLE_SENSED_LED_PIN))
+  {
+    if(false == PrevAFCIState)
+    {
+       PrevAFCIState = true;
+
+       counter++;
+       lastTick = millis();
+
+    }
+  }
+  else
+  {
+    PrevAFCIState = false;
+    
+  }
+  if(millis() > (lastTick + 700))
+    {
+      if(counter>0)
+      { 
+      
+        Serial.print("AFCI trip :");
+        Serial.print(counter);
+        Serial.println(" Blinks");
+        gSensors.afciBlinks = counter;
+        counter = 0;
+      }
+    }
+
+
+ 
+
 }

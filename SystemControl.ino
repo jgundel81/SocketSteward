@@ -20,7 +20,7 @@ wirenut 6.55
 #define WARNING_IMPEDANCE_LEVEL    0.64             // 8% Vdrop is 640 milliohms
 #define UNACCAPTABLE_IMPEDANCE_LEVEL  0.8          // 10% Vdrop DROP at 15 amps is R = 12 / 15 = 800 milliohms
 
-#define UPDATE_gAnalysis_impedance true
+
 #define INCLUDE_TIMESTAMP 0X01
 #define INCLUDE_SENSORS 0X02
 #define INCLUDE_STATUS 0X04

@@ -138,7 +138,7 @@ error_messages_t error_message_table[NUM_OF_ERRORS] = {
 
 ledErrorBlinkPattern_t error_led_table[NUM_OF_ERRORS] = {
   {{0,0},{0,0},{0,0}}, //no_error
-  {{1000,200},{3000,500},{200,800}},//thermal_runaway,
+  {{0,0},{0,0},{0,0}},//thermal_runaway,
   {{0,0},{0,0},{0,0}},//low_voltage,
   {{0,0},{0,0},{0,0}},//ground_fault,
   {{0,0},{0,0},{0,0}},//arc_fault,
