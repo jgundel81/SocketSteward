@@ -19,6 +19,7 @@
 //0-255 Value for 0-100%
 
 void initLEDs() {
+
   aw.pinMode(RED_LED_PIN, AW9523_LED_MODE);
   aw.pinMode(AMBER_LED_PIN, AW9523_LED_MODE);
   aw.pinMode(GREEN_LED_PIN, AW9523_LED_MODE);
@@ -27,6 +28,7 @@ void initLEDs() {
   aw.pinMode(WHITE_ALARM_LED_PIN, OUTPUT);
   aw.pinMode(AF_RECEPTACLE_SENSED_LED_PIN, INPUT);
   aw.pinMode(GF_RECEPTACLE_SENSED_LED_PIN, INPUT);
+
 
   aw.analogWrite(RED_LED_PIN, 0);
   aw.analogWrite(AMBER_LED_PIN, 0);
