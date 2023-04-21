@@ -5,8 +5,16 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SH110X.h>
+//#include <vector>
+//#include <CSV_Parser.h> // Install CSV Parser Library (present in Arduino IDE library manager)
+//using namespace std;  //jamie commented this. Why is it here?
 
 Adafruit_SH1107 display = Adafruit_SH1107(64, 128, &Wire);
+
+#define OLED_BANNER "Socket Steward J4/20"
+#define UPDATE_gAnalysis_impedance true
+
+void disconnectPower(void);
 
 typedef enum
 {
@@ -42,6 +50,7 @@ void initOLED(void) {
   display.display(); // actually display all of the above
 }
 
+
 /*
 * OLED Task Updates the OLED Display
 */
@@ -49,10 +58,10 @@ void display_task(void) {
 
   static int count = 0;
   //Only init once
-  static bool isInited = false;
-  if(false == isInited)
+  static bool OLEDInited = false;
+  if(false == OLEDInited)
   {
-    isInited = true;
+    OLEDInited = true;
     initOLED();
   }
 
@@ -61,7 +70,7 @@ void display_task(void) {
   switch(gDisplayState)
   {
     case dashboard:  // labeled HOME
-      displayDashboard(gCurrentError);
+      displayDashboard(gLatestEvent);
       if(true == gButtonStatus.buttonPressed)
       {
         gButtonStatus.buttonPressed = false;
@@ -81,7 +90,7 @@ void display_task(void) {
       }
       break;
     case options:  
-      displayOptions(gCurrentError);
+      displayOptions(gLatestEvent);
       if(gButtonStatus.buttonPressed)
       {
         gButtonStatus.buttonPressed = false;
@@ -94,10 +103,10 @@ void display_task(void) {
             acPower.start(); //start measuring
             TC.restartTimer(1000); // 
             delay(1000);
-            float val = getVoltageDrop();
-            Serial.print("Voltage Drop:");
-            Serial.println(val);
+            Serial.println("impedance test from button A");
+            runImpedanceTest(UPDATE_gAnalysis_impedance);
             TC.restartTimer(2000); // 2 msec 
+            gButtonStatus.button = BUTTON_C; // stop looping this!
         }
         else if(BUTTON_B == gButtonStatus.button)
         {
@@ -105,11 +114,12 @@ void display_task(void) {
             stopLogging();
           else
           {
-
-           if(false == startLogging())
+            dataLoggingStartedTime = now;
+            if(false == startLogging())
             {
               gDisplayState = dashboard;
             }
+
           }
         } 
         else if(BUTTON_C == gButtonStatus.button)
@@ -122,7 +132,7 @@ void display_task(void) {
       }
       break;
     case details:
-       displayDetails(gCurrentError);
+      displayDetails(gLatestEvent);  
       if(gButtonStatus.buttonPressed)
       {
         gButtonStatus.buttonPressed = false;
@@ -132,11 +142,11 @@ void display_task(void) {
         }
         else if(BUTTON_B == gButtonStatus.button)
         {
-         
+         disconnectPower();
         } 
         else if(BUTTON_C == gButtonStatus.button)
         {
-        gDisplayState = dashboard;  // secret path to home  page
+        gDisplayState = dashboard;  
         } 
       }
       break;
@@ -149,7 +159,7 @@ void displayOptions(error_conditions_t error)
 
   display.clearDisplay();
   display.setCursor(0, 0);
-  display.println("Socket Steward 0.4.3");  // use top row for future "more options button "
+  display.println(OLED_BANNER);  // use top row for future "more options button "
   display.println("                     ");
   display.setCursor(0, 15);
     if(dataloggingEnabled){
@@ -177,7 +187,7 @@ void displayDashboard(error_conditions_t error)
 
   display.clearDisplay();
   display.setCursor(0, 0);
-  display.println("Socket Steward  0.4.3");
+  display.println(OLED_BANNER);
   display.setCursor(0, 15);
   display.println(error_message_table[error].dashboardMsg);
   display.setCursor(0, 30);
@@ -205,11 +215,11 @@ void displayDetails(error_conditions_t error)
 
   display.clearDisplay();
   display.setCursor(0, 0);
-   display.println("Socket Steward  0.4.3");
-   if(no_error != error)
+   display.println(OLED_BANNER);
+   if(!dataloggingEnabled && no_error != error)  //TEST CODE, REMOVE FALSE FROM CONDITION
   {
   display.println("                     ");
-  display.println(error_message_table[error].detailedErrorMsg);
+  display.println(error_message_table[error].detailedErrorMsg); 
   display.println("                     ");
   display.println("< home               ");
   display.println("                     ");
@@ -233,28 +243,41 @@ void displayDetails(error_conditions_t error)
       dataString += " LOGGING";
     display.println(dataString);
    
-    display.setCursor(0, 13);
-    display.print("Amb:");
-    display.print(gSensors.ambientTemp);
-    display.print(" C   Plug:");
+    display.setCursor(0, 15);
+    display.print("Ta ");
+    display.print(gSensors.ambientTemp,1);
+    display.print(" Tplug ");
     display.print(gSensors.plugTemp);
-    display.println(" C");
+    
    
-    display.setCursor(0, 25);
-    display.print("lPin:");
-    display.print(gSensors.LRecepticalTemp);
-    display.print(" C  rPin:");
-    display.print(gSensors.RRecepticalTemp);
-    display.println(" C");
+    display.setCursor(0, 26);
+    display.print("TsL ");
+    display.print(gSensors.LRecepticalTemp,1);
+    display.print(" TsR ");
+    display.print(gSensors.RRecepticalTemp,1);
+    
     
     display.setCursor(0, 37);
-    display.print("Volts:");
-    display.print(gSensors.voltage);
-    display.print(" Amps:");
-    display.println(gSensors.current);
+   
+    
+    display.print("v=");
+    display.print(gSensors.voltage,1);
+    display.print(" a=");
+    display.println(gSensors.current,1);
+
     
     display.setCursor(0, 50);
-    display.print("< Home");
+    dataString = "< back  ";
+    if(dataloggingEnabled)
+    {
+      dataString += "t0=";
+      dataString += String(dataLoggingStartedTime.hour());
+      dataString += ":";
+      dataString += String(dataLoggingStartedTime.minute());
+      dataString += ":";
+      dataString += String(dataLoggingStartedTime.second());
+    }
+    display.println(dataString);
     
   }
   
