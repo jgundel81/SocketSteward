@@ -1,5 +1,5 @@
 /*
- *. Monito.ino
+ *. Monitor.ino
  */
 
 //Function Prototypes
@@ -11,133 +11,285 @@ double tempInCelcius(int adcVal);
 #define CURRENT_PIN A2
 #define AMBIENTTEMP_PIN A0
 
-int acVolt;
-int acCurr;
+#define CURRENT_TOO_HIGH_FOR_TEST_LOAD 10
+#define MAX_APPLIANCE_AMPS_ALLOWED 10
 
-File testVector;  
+#define UPDATE_gAnalysis_impedance true
 
+int countGetValues = 0; // count ADC iterations
+
+void disconnectPower(void);
+
+
+#define WATCH_IMPEDANCE_LEVEL      0.4             // 5% Vdrop DROP at 15 amps is R = 6 / 15 = 400 milliohms
+#define WARNING_IMPEDANCE_LEVEL    0.64             // 8% Vdrop is 640 milliohms
+#define UNACCEPTABLE_IMPEDANCE_LEVEL  0.8 
 //Structure to hold all Sensor information
 //This will most likely need to be modified.
 typedef struct
 {
-  int ambientTemp;
-  int LRecepticalTemp;
-  int RRecepticalTemp;
-  int plugTemp;
+  float ambientTemp;
+  float LRecepticalTemp;
+  float LRecepticalTempCorrection;
+  float RRecepticalTemp;
+  float RRecepticalTempCorrection;
+  float plugTemp;
+  float plugTempCorrection;
   float voltage;
   float current;
+  bool gfciTrip;
+  uint8_t afciBlinks;
   // Add the rest of the sensors to monitor here.
 } system_sensors_t;
 
 system_sensors_t gSensors;
 
-bool readLine(File &f, char* line, size_t maxLen) {
-  for (size_t n = 0; n < maxLen; n++) {
-    int c = f.read();
-    if ( c < 0 && n == 0) return false;  // EOF
-    if (c < 0 || c == '\n') {
-      line[n] = 0;
-      return true;
-    }
-    line[n] = c;
-  }
-  return false; // line too long
-}
+typedef struct
+{
+  float ambientTemp;
+  float LRecepticalTemp;
+  float LRecepticalTempCorrection;
+  float RRecepticalTemp;
+  float RRecepticalTempCorrection;
+  float plugTemp;
+  float plugTempCorrection;
+  float MaxVoltage;
+  float MaxCurrent;
+  float impedance;
+  float minImpedance;
+  // Add the rest of the sensors to monitor here.
+} sensor_analysis_t;
 
-bool readVals(int* v1, int* v2, int* v3, int* v4, float* v5, float* v6) {
-  char line[200], *ptr, *str;
-  if (!readLine(testVector, line, sizeof(line))) {
-    return false;  // EOF or too long
-  }
-  *v1 = strtol(line, &ptr, 10);
-  if (ptr == line) return false;  // bad number if equal
-  while (*ptr) {
-    if (*ptr++ == ',') break;
-  }
-  *v2 = strtol(ptr, &str, 10);
-  while (*ptr) {
-    if (*ptr++ == ',') break;
-  }
-  *v3 = strtol(ptr, &str, 10);
-  while (*ptr) {
-    if (*ptr++ == ',') break;
-  }
-  *v4 = strtol(ptr, &str, 10);
-  while (*ptr) {
-    if (*ptr++ == ',') break;
-  }
-  *v5 = strtol(ptr, &str, 10);
-  while (*ptr) {
-    if (*ptr++ == ',') break;
-  }
-  *v6 = strtol(ptr, &str, 10);
-  while (*ptr) {
-    if (*ptr++ == ',') break;
-  }
+sensor_analysis_t gAnalysis;
+
+
+
+void GetValues(void) { 
+  acVoltADC = analogRead(A1);  // read the ADC, channel for Vin
+  acCurrADC = analogRead(A2);  // read the ADC, channel for Iin
+  acPower.update(acVoltADC, acCurrADC);
   
-  return str != ptr;  // true if number found
+  //++countGetValues;
 }
 
-void GetValues(void)  {
-    acVolt = analogRead(A1);  // read the ADC, channel for Vin
-    acCurr = analogRead(A2);  // read the ADC, channel for Iin
-    acPower.update(acVolt, acCurr);
-  }
 
 
-void sensormonitor_task(void)
-{
-  testVector = SD.open("TEST.CSV", FILE_READ);
-  if (testVector)
+Ewma AmbientTempFilter(0.01);  // 0.1 = Less smoothing / 0.01 more smoothing
+Ewma LTempFilter(0.01);
+Ewma RTempFilter(0.01);
+Ewma PlugTempFilter(0.01);
+
+Ewma VoltFilter(0.1);   
+Ewma CurFilter(0.1);
+
+
+void sensormonitor_task(void) {
+  //writeTrace("mon", INCLUDE_SENSORS && INCLUDE_STATUS );
+  acPower.publish();  //calculates the RMS values from the series stored in GetValues()
+  
+  
+  
+  gSensors.voltage = acPower.rmsVal1;
+  gSensors.current = acPower.rmsVal2;
+
+  /*
+  if (gAnalysis.impedance != 0 && millis() < 70)  // change the millis() comparison to a higher number if you want this to run 
   {
-    Serial.println("Found test vector!");
-    int pTemp, lRecTemp, rRecTemp, ambTemp;
-    float volt, cur;
-    readVals(&pTemp, &lRecTemp, &rRecTemp, &ambTemp, &volt, &cur);
-    gSensors.plugTemp = pTemp;
-    Serial.println(gSensors.plugTemp);
-    gSensors.LRecepticalTemp = lRecTemp;
-    Serial.println(gSensors.LRecepticalTemp);
-    gSensors.RRecepticalTemp = rRecTemp;
-    Serial.println(gSensors.RRecepticalTemp);
-    gSensors.ambientTemp = ambTemp;
-    Serial.println(gSensors.ambientTemp);
-    gSensors.voltage = volt;
-    Serial.println(gSensors.voltage);
-    gSensors.current = cur;
-    Serial.println(gSensors.current);
-    testVector.close();
+    Serial.println("this is probably obsolete now");
+    float val = runImpedanceTest(UPDATE_gAnalysis_impedance);
+    Serial.print("Impedance returned was ");
+    Serial.println(val);
   }
-  else
-  {
-    Serial.println("Failed to find test vector!");
-    acPower.publish();
-    gSensors.voltage = acPower.rmsVal1;
-    gSensors.current = acPower.rmsVal2;
-    gSensors.plugTemp = tempInCelcius(analogRead(PLUGTEMP_PIN));
-    gSensors.LRecepticalTemp = tempInCelcius(analogRead(LRECEPTICALTEMP_PIN));
-    gSensors.RRecepticalTemp = tempInCelcius(analogRead(RRECEPTICALTEMP_PIN));
-    gSensors.ambientTemp = tempInCelcius(analogRead(AMBIENTTEMP_PIN));
-  }
+  */
 
-  //Sample the other Sensors
+  // TC.restartTimer(2000); // 2 msec
+
+  TC.stopTimer(); 
+  gSensors.plugTemp = PlugTempFilter.filter(tempInCelcius(analogRead(PLUGTEMP_PIN)));
+  gSensors.LRecepticalTemp = LTempFilter.filter(tempInCelcius(analogRead(LRECEPTICALTEMP_PIN)));
+  gSensors.RRecepticalTemp = RTempFilter.filter(tempInCelcius(analogRead(RRECEPTICALTEMP_PIN)));
+  gSensors.ambientTemp = AmbientTempFilter.filter(tempInCelcius(analogRead(AMBIENTTEMP_PIN)));
+  TC.restartTimer(2000);  // 2 msec
+
+  //writeTrace("ADC", INCLUDE_SENSORS && INCLUDE_STATUS );
+  
 }
 
-double B =3380;        //Parameter of Thermistor
-double T0 = 298.15;     //Room Temp in Kelvin  
-double R0 = 10000;      //Resistance of Thermistor at Room Temp
-double VREF = 3.3;      //VREF of ADC
-double ADC_PRECISION = 1023.0; 
+double B = 3380;     //Parameter of Thermistor
+double T0 = 298.15;  //Room Temp in Kelvin
+double R0 = 10000;   //Resistance of Thermistor at Room Temp
+double VREF = 3.3;   //VREF of ADC
+double ADC_PRECISION = 1023.0;
 
-double tempInCelcius(int adcVal)
-{
+double tempInCelcius(int adcVal) {
   double R;            //Calculated Resistance of Thermistor
   double temperature;  //Calculated Temp in C
   double voltage;      //Calcuated Voltage at ADC Pin
-  
-  voltage = ( (adcVal * VREF) / ADC_PRECISION ); 
+
+  voltage = ((adcVal * VREF) / ADC_PRECISION);
   R = ((VREF * 10000) / voltage) - 10000;
 
-  temperature =(1/((1/T0) + ((1/B)*log(R/R0))) - 273.15)  ;
+  temperature = (1 / ((1 / T0) + ((1 / B) * log(R / R0))) - 273.15);
   return temperature;
+}
+
+float runImpedanceTest(bool update_gAnalysis) {
+  float I_underLoad, V_underLoad, R_underLoad;
+  writeTrace("R1", INCLUDE_SENSORS && INCLUDE_STATUS );
+  
+  aw.digitalWrite(RELAY_PIN_IO_EXPANDER, LOW);
+  
+  acPower.publish();  //is this shorting out any acquisition already running?  an immediate restart the RMS sequence like we need? https://github.com/MartinStokroos/TrueRMS/blob/master/src/TrueRMS.cpp
+  delay(50);          //shouldn't we use the acquire flag from impedance instead?
+  acPower.publish();
+  gSensors.voltage = acPower.rmsVal1;
+  gSensors.current = acPower.rmsVal2;  // no load voltage
+  writeTrace("R2", INCLUDE_SENSORS && INCLUDE_STATUS );
+  
+  
+  if (gSensors.current > MAX_APPLIANCE_AMPS_ALLOWED) {
+    gLatestEvent = appliance_blocked_vdrop;
+    Serial.println("in runImpedanceTest() The measured appliance load was too high to add another 12 amp load. Will use appliance load for impedance");
+    gPowerStatus = CONNECTED_W_NOTIFYING_FLAG;
+    if(update_gAnalysis == UPDATE_gAnalysis_impedance) 
+    {
+      gAnalysis.impedance = gSensors.voltage / gSensors.current;
+    }
+    writeTrace("R3", INCLUDE_SENSORS && INCLUDE_STATUS );
+  
+    return gSensors.voltage / gSensors.current;
+  
+  }
+  if (gSensors.voltage < 100) 
+  {
+    writeTrace("R4", INCLUDE_SENSORS && INCLUDE_STATUS );
+  
+    gLatestEvent = low_voltage;
+    // gPowerStatus = // will let alarm task decide what the status is.
+    Serial.println("Voltage to low, aborting runImpedanceTest()");
+    return false;
+  } 
+  if(true)  // not yet aborted
+  {
+    aw.digitalWrite(RELAY_PIN_IO_EXPANDER, HIGH);  //turn on the load
+    delay(50);
+    acPower.publish();
+    V_underLoad = acPower.rmsVal1;                // voltage under load
+    I_underLoad = acPower.rmsVal2;                // current under load
+    aw.digitalWrite(RELAY_PIN_IO_EXPANDER, LOW);  //turn load back off
+
+    Serial.print(" V before:");
+    Serial.print(gSensors.voltage,1);
+    Serial.print(" Vload:");
+    Serial.print(V_underLoad,1);
+
+    Serial.print(" Current:");
+    Serial.print(gSensors.current,1);
+    Serial.print(" Current Through Resistor:");
+    Serial.print(I_underLoad,1);
+
+    Serial.print(" Impedance before:");
+    Serial.print(gSensors.voltage / gSensors.current,1);
+
+    R_underLoad = V_underLoad / I_underLoad;
+    Serial.print("  Impedance after:");
+    Serial.println(R_underLoad,1);
+
+    if(I_underLoad < MAX_APPLIANCE_AMPS_ALLOWED){
+      // dummy load AND appliance load all too low for some reason.
+      gLatestEvent = test_load_error;
+      gPowerStatus |= ERROR_IN_SYSTEM_FLAG; 
+      Serial.println("Current during impedance test was below expected test current. ");
+      return false;
+    } 
+
+    if(update_gAnalysis == UPDATE_gAnalysis_impedance) 
+    {
+      if(R_underLoad > 50){
+        Serial.println("Calculated resistance makes no sense because we should have caught it already");
+      }
+      else{
+        gAnalysis.impedance = R_underLoad;
+        if(R_underLoad < WATCH_IMPEDANCE_LEVEL ){
+          gPowerStatus = CONNECTED_W_NORMAL_FLAG; // this overwrites any other flags. 
+          gLatestEvent = full_cap_confirmed;
+        }
+        else if(R_underLoad < WARNING_IMPEDANCE_LEVEL){
+          gPowerStatus = CONNECTED_W_WATCH_FLAG; // this overwrites any other flags. 
+          gLatestEvent = mrg_cap_confirmed;
+
+        }
+        else if(R_underLoad < UNACCEPTABLE_IMPEDANCE_LEVEL){
+          // NEED SOME TREND MONITORING HERE TO SEE IF IMPEDANCE IS CLIMBING
+          gPowerStatus = CONNECTED_W_WARNING_FLAG; // this overwrites any other flags. 
+          gLatestEvent = mrg_cap_confirmed;
+        }
+        else {
+          disconnectPower();
+          gPowerStatus = CONNECTED_W_WARNING_FLAG; // this overwrites any other flags. 
+          gLatestEvent = mrg_cap_confirmed;
+          
+
+        }
+      }
+      
+    }
+    return R_underLoad;
+  }
+}
+
+void GFCI_AFCI_task(void)
+{
+  static bool PrevGFCIState = false;
+  static bool PrevAFCIState = false;
+  static long long lastTick = millis();
+  static uint8_t counter = 0;
+ /* if GFCI Blinks at all it is tripped.
+    Only trip once need to power off to reset */
+  if(HIGH == aw.digitalRead(GF_RECEPTACLE_SENSED_LED_PIN))
+  {
+    if(false == PrevGFCIState)
+    {
+       PrevGFCIState = true;
+       Serial.println("GFCI trip");
+       gSensors.gfciTrip = true;
+    }
+  }
+  else if(false == gSensors.gfciTrip)
+  {
+    PrevGFCIState = false;
+  }
+
+  if(HIGH == aw.digitalRead(AF_RECEPTACLE_SENSED_LED_PIN))
+  {
+    if(false == PrevAFCIState)
+    {
+       PrevAFCIState = true;
+
+       counter++;
+       lastTick = millis();
+
+    }
+  }
+  else
+  {
+    PrevAFCIState = false;
+    
+  }
+  if(millis() > (lastTick + 700))
+    {
+      if(counter>0)
+      { 
+      
+        Serial.print("AFCI trip :");
+        Serial.print(counter);
+        Serial.println(" Blinks");
+        gSensors.afciBlinks = counter;
+        counter = 0;
+      }
+    }
+
+
+ 
+
 }
