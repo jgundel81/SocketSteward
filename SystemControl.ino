@@ -11,25 +11,25 @@ wirenut 6.55
 14 ga
 */
 
-#define LEVER_SPLICE_MILLIOHMS 21               //https://drive.google.com/file/d/1aKQNRFilk3AV42mCHJ-DNqQHri_0caNR/view?usp=sharing
-#define GA14_CABLE_MILLIOHMS_PER_FOOT 4.8         // 4.8  https://drive.google.com/file/d/1aKQNRFilk3AV42mCHJ-DNqQHri_0caNR/view?usp=sharing 
-                                                // at 30 ft cable + 8 receptacles (16 lever nuts) an exemplar circuit impedance would be 30 * 4.8 + 16 * 21 = 480 millohms
-                                                // But assuming that unit is at the end of the line means it won't catch a too high impedance at the beginning at 144 milliohms
-                                                // a future user input could define if the outlet is "close" OR "far" from the fuse box. 
+#define LEVER_SPLICE_MILLIOHMS 21          //https://drive.google.com/file/d/1aKQNRFilk3AV42mCHJ-DNqQHri_0caNR/view?usp=sharing
+#define GA14_CABLE_MILLIOHMS_PER_FOOT 4.8  // 4.8  https://drive.google.com/file/d/1aKQNRFilk3AV42mCHJ-DNqQHri_0caNR/view?usp=sharing
+                                           // at 30 ft cable + 8 receptacles (16 lever nuts) an exemplar circuit impedance would be 30 * 4.8 + 16 * 21 = 480 millohms
+                                           // But assuming that unit is at the end of the line means it won't catch a too high impedance at the beginning at 144 milliohms
+                                           // a future user input could define if the outlet is "close" OR "far" from the fuse box.
+#define WATCH_IMPEDANCE_LEVEL 0.4          // 5% Vdrop DROP at 15 amps is R = 6 / 15 = 400 milliohms
+#define WARNING_IMPEDANCE_LEVEL 0.64       // 8% Vdrop is 640 milliohms
+#define UNACCAPTABLE_IMPEDANCE_LEVEL 0.8   // 10% Vdrop DROP at 15 amps is R = 12 / 15 = 800 milliohms
+
 #define WATCH_IMPEDANCE_LEVEL      0.4             // 5% Vdrop DROP at 15 amps is R = 6 / 15 = 400 milliohms
 #define WARNING_IMPEDANCE_LEVEL    0.64             // 8% Vdrop is 640 milliohms
-#define UNACCAPTABLE_IMPEDANCE_LEVEL  0.8          // 10% Vdrop DROP at 15 amps is R = 12 / 15 = 800 milliohms
+#define UNACCEPTABLE_IMPEDANCE_LEVEL  0.8 
 
 
-#define INCLUDE_TIMESTAMP 0X01
-#define INCLUDE_SENSORS 0X02
-#define INCLUDE_STATUS 0X04
+
 
 void disconnectPower(void);
 
-//Prototypes
-void writeEventLog(String messageText);
-void disconnectPower(void);
+
 
 typedef struct
 {
@@ -49,8 +49,8 @@ sensor_trends_t gSensorTrend;
 
 void control_task(void) {
   //writeTrace("head of control_task()", INCLUDE_TIMESTAMP && INCLUDE_SENSORS && INCLUDE_STATUS );
-  static uint32_t tick1 = 0;  //used for waiting when a pending AFGF pulse code might arrive.
-  static uint32_t dipTick = 0; // measuring dips
+  static uint32_t tick1 = 0;    //used for waiting when a pending AFGF pulse code might arrive.
+  static uint32_t dipTick = 0;  // measuring dips
 
 
   //Add some logic here to declare an event and set gPowerStatus.
@@ -60,7 +60,8 @@ void control_task(void) {
     //WITHOUT SENSORS, system cannot do it's protection and we don't want it to be used.
     gLatestEvent = sensor_error;
     gPowerStatus &= ERROR_IN_SYSTEM_FLAG;
-    
+    processEvent(gLatestEvent);
+
     // is a limp mode requested by virtue of datalogging being turned on?
     //allows a user to first turn on datalogging and then reset power and run in a "limp mode" ie, disconnect won't be forced .
     // WARNING: limp mode will be cleared and a disconnect will happen at a reboot clear limp mode so must be repeated every reboot
@@ -88,7 +89,7 @@ void control_task(void) {
 
   // check for NO VOLTAGE (thus AFGF is tripped and attached appliance power is disconnected)
   if (gSensors.voltage < 10) {
-    
+
     if (gPowerStatus == INITIALIZING) {  // no volts but just booted up. Might have been previously tripped and then power cycled.
       gLatestEvent = trp_no_indication;
       gPowerStatus = DISCONNECTED_AT_POWER_UP;
@@ -105,22 +106,19 @@ void control_task(void) {
       writeEventLog("vOLTS < 10 when previously connected. Waiting for AFGF blink codes.");
     } else if (ANY_DISCONNECTED_STATUS(gPowerStatus)) {
       // These are all the other disconnected conditions and volts still say it is disconnected
-      if(gSensors.current > 1)
-      {
+      if (gSensors.current > 1) {
         gLatestEvent = sensor_error;
         gPowerStatus &= ERROR_IN_SYSTEM_FLAG;
-        writeEventLog("No load-side voltage detected, yet current > 1 amp. This may be a voltage sensor failure or disconnect");
       }
-      
     }
-  
-  
-  
-  } else if (gSensors.voltage < 90) {  // This could be a serious voltage dip, need to add code for voltage dip analysis 
+
+
+
+  } else if (gSensors.voltage < 90) {  // This could be a serious voltage dip, need to add code for voltage dip analysis
     gLatestEvent = low_voltage;
     gPowerStatus = CONNECTED_W_WARNING_FLAG;
     writeEventLog("Voltage dipped below 90, suggesting high resistance ");
-    
+
 
   } else if (gSensors.voltage < 105) {  // this can be a typical inrush situation with compressor loads in the home
 
@@ -132,15 +130,20 @@ void control_task(void) {
 
 
   } else if (gSensors.voltage < 125) {  // in normal operating range... where
-    if(gPowerStatus && CONNECTED_ANY_FLAG){
+    if (gPowerStatus && CONNECTED_ANY_FLAG) {
       // this is the normal state with appropriate voltages
-      
-      
+
+
       // runImpedanceTest(UPDATE_gAnalysis_impedance);  put this in if there was a disconnect event and this is freshly connected but not at boot time??
     }
-    
   }
 
+  // automatically discover a change in event and process it.
+  if (gLatestEvent != gPreviousEvent) {
+    gPreviousEvent = gLatestEvent;
+    ++event_count[gLatestEvent];
+    processEvent(gLatestEvent);
+  }
   // debug code to short out all errors
   //    gLatestEvent = no_error;
   //    gPowerStatus = CONNECTED_ANY_FLAG;
@@ -148,79 +151,20 @@ void control_task(void) {
 
 // END control task
 
-//void processEvent(error_conditions_t error){
-  // this is automatically called if there is an event change 
-  // first write the text from the error message table to the event log
-  // second say something out the speaker if a file exists for that event, files are the third column of the error message table
-
-//}
-
-void writeEventLog(String messageText) {
-  
-  
-  
-  String dataString = "";
-
-  dataString += String(now.month());
-  dataString += "/";
-  dataString += String(now.day());
-  dataString += "/";
-  dataString += String(now.year());
-  dataString += " ";
-  dataString += String(now.hour());
-  dataString += ":";
-  dataString += String(now.minute());
-  dataString += ":";
-  dataString += String(now.second());
-  dataString += "  Event: ";
-  dataString += String(gLatestEvent);
-  dataString += "  Status: ";
-  dataString += String(gPowerStatus);
-  if (messageText != "") {
-    dataString += " ";
-    dataString += messageText;
-  }
-
-
-  Serial.println(dataString);
-  File eventfile = SD.open("eventLog.csv", FILE_WRITE);
-  if (eventfile) {
-    eventfile.println(dataString);
-  } else {
-    Serial.println("unable open eventLog.csv");
-    // ? should this just return here, or attempt to open the datalog file anyway? There is more SD card recovery stuff in SystemLogging.ino
-  }
-  if (dataloggingEnabled) {
-    String datalogFileName = "";
-    datalogFileName += String(now.month());
-    datalogFileName += String(now.day());
-    datalogFileName += String(now.year());
-    datalogFileName += ".CSV";
-
-    File dataFile = SD.open(datalogFileName, FILE_WRITE);
-    // if the file is available, write to it:
-    if (dataFile) {
-      dataFile.println(dataString);
-      dataFile.close();
-    } else {
-      Serial.print(datalogFileName);
-      Serial.println(" could not be opened");
-    }
-  }
-}
 
 
 void disconnectPower(void) {
   aw.digitalWrite(GFI_TRIP_RELAY_PIN, HIGH);
+  Serial.print("GFI Trip relay on");
   delay(200);  // need to confirm how long it will take to trip a GF circuit
+   Serial.print("GFI Trip relay off");
   aw.digitalWrite(GFI_TRIP_RELAY_PIN, LOW);
-   aw.digitalWrite(RELAY_PIN_IO_EXPANDER, LOW);
   
   acPower.publish();  //is this shorting out any acquisition already running?  an immediate restart the RMS sequence like we need? https://github.com/MartinStokroos/TrueRMS/blob/master/src/TrueRMS.cpp
   delay(50);          //shouldn't we use the acquire flag from impedance instead?
   acPower.publish();
   gSensors.voltage = acPower.rmsVal1;
-  gSensors.current = acPower.rmsVal2;  // no load 
+  gSensors.current = acPower.rmsVal2;  // no load
   if (gSensors.voltage > 10 || gSensors.current > 1) {
     writeEventLog("disconnectPower() failed to interrupt power via GF Trip relay. Check relay and trip resistor wiring.");
     writeEventLog("voltage > 10 @ " + String(gSensors.voltage));

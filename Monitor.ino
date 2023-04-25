@@ -1,5 +1,5 @@
 /*
- *. Monitor.ino
+ *. Monitor.ino THIS ONLY COLLECTS SENSOR DATA. Processing is done in SystemControl.ino
  */
 
 //Function Prototypes
@@ -16,14 +16,11 @@ double tempInCelcius(int adcVal);
 
 #define UPDATE_gAnalysis_impedance true
 
-int countGetValues = 0; // count ADC iterations
-
-void disconnectPower(void);
+int countGetValues = 0;  // count ADC iterations
 
 
-#define WATCH_IMPEDANCE_LEVEL      0.4             // 5% Vdrop DROP at 15 amps is R = 6 / 15 = 400 milliohms
-#define WARNING_IMPEDANCE_LEVEL    0.64             // 8% Vdrop is 640 milliohms
-#define UNACCEPTABLE_IMPEDANCE_LEVEL  0.8 
+
+
 //Structure to hold all Sensor information
 //This will most likely need to be modified.
 typedef struct
@@ -64,11 +61,11 @@ sensor_analysis_t gAnalysis;
 
 
 
-void GetValues(void) { 
+void GetValues(void) {
   acVoltADC = analogRead(A1);  // read the ADC, channel for Vin
   acCurrADC = analogRead(A2);  // read the ADC, channel for Iin
   acPower.update(acVoltADC, acCurrADC);
-  
+
   //++countGetValues;
 }
 
@@ -79,16 +76,16 @@ Ewma LTempFilter(0.01);
 Ewma RTempFilter(0.01);
 Ewma PlugTempFilter(0.01);
 
-Ewma VoltFilter(0.1);   
+Ewma VoltFilter(0.1);
 Ewma CurFilter(0.1);
 
 
 void sensormonitor_task(void) {
   //writeTrace("mon", INCLUDE_SENSORS && INCLUDE_STATUS );
   acPower.publish();  //calculates the RMS values from the series stored in GetValues()
-  
-  
-  
+
+
+
   gSensors.voltage = acPower.rmsVal1;
   gSensors.current = acPower.rmsVal2;
 
@@ -104,7 +101,7 @@ void sensormonitor_task(void) {
 
   // TC.restartTimer(2000); // 2 msec
 
-  TC.stopTimer(); 
+  TC.stopTimer();
   gSensors.plugTemp = PlugTempFilter.filter(tempInCelcius(analogRead(PLUGTEMP_PIN)));
   gSensors.LRecepticalTemp = LTempFilter.filter(tempInCelcius(analogRead(LRECEPTICALTEMP_PIN)));
   gSensors.RRecepticalTemp = RTempFilter.filter(tempInCelcius(analogRead(RRECEPTICALTEMP_PIN)));
@@ -112,7 +109,6 @@ void sensormonitor_task(void) {
   TC.restartTimer(2000);  // 2 msec
 
   //writeTrace("ADC", INCLUDE_SENSORS && INCLUDE_STATUS );
-  
 }
 
 double B = 3380;     //Parameter of Thermistor
@@ -133,163 +129,104 @@ double tempInCelcius(int adcVal) {
   return temperature;
 }
 
-float runImpedanceTest(bool update_gAnalysis) {
-  float I_underLoad, V_underLoad, R_underLoad;
-  writeTrace("R1", INCLUDE_SENSORS && INCLUDE_STATUS );
-  
-  aw.digitalWrite(RELAY_PIN_IO_EXPANDER, LOW);
-  
-  acPower.publish();  //is this shorting out any acquisition already running?  an immediate restart the RMS sequence like we need? https://github.com/MartinStokroos/TrueRMS/blob/master/src/TrueRMS.cpp
-  delay(50);          //shouldn't we use the acquire flag from impedance instead?
-  acPower.publish();
-  gSensors.voltage = acPower.rmsVal1;
-  gSensors.current = acPower.rmsVal2;  // no load voltage
-  writeTrace("R2", INCLUDE_SENSORS && INCLUDE_STATUS );
-  
-  
-  if (gSensors.current > MAX_APPLIANCE_AMPS_ALLOWED) {
-    gLatestEvent = appliance_blocked_vdrop;
-    Serial.println("in runImpedanceTest() The measured appliance load was too high to add another 12 amp load. Will use appliance load for impedance");
-    gPowerStatus = CONNECTED_W_NOTIFYING_FLAG;
-    if(update_gAnalysis == UPDATE_gAnalysis_impedance) 
-    {
-      gAnalysis.impedance = gSensors.voltage / gSensors.current;
+
+
+void GFCI_AFCI_task(void) {
+  static bool PrevRedState = false;
+  static bool PrevAmberState = false;
+  static long long lastAmberTick = millis();  // JOE, why long long instead of Unsigned long? And since this wraps in 50 days,
+                                              // should we do something to make sure we don't have a counter overrun issue?
+                                              // if lastAmberTick was a 24 bit
+                                              // Can we stuff millis() with 2^24 - 240000 to force a wrap in the first 4 minutes of code execution?
+                                              // (just to make this an immediate visible bug catcher?)
+  static unsigned long lastRedTick = millis();
+  static uint8_t amberCounter = 0;
+  static uint8_t redCounter = 0;
+
+
+  if (HIGH == aw.digitalRead(RED_AFGF_INDICATOR_INPUT_PIN)) {
+    aw.analogWrite(RED_LED_PIN, LED_DIM_LEVEL);  //Red on, turn on LED
+    if (false == PrevRedState) {
+      PrevRedState = true;
+
+      redCounter++;
+      lastRedTick = millis();
     }
-    writeTrace("R3", INCLUDE_SENSORS && INCLUDE_STATUS );
-  
-    return gSensors.voltage / gSensors.current;
-  
+  } else {
+    PrevRedState = false;
+    aw.analogWrite(RED_LED_PIN, 0);  // red not on set LED off and Set previous state false
   }
-  if (gSensors.voltage < 100) 
-  {
-    writeTrace("R4", INCLUDE_SENSORS && INCLUDE_STATUS );
-  
-    gLatestEvent = low_voltage;
-    // gPowerStatus = // will let alarm task decide what the status is.
-    Serial.println("Voltage to low, aborting runImpedanceTest()");
-    return false;
-  } 
-  if(true)  // not yet aborted
-  {
-    aw.digitalWrite(RELAY_PIN_IO_EXPANDER, HIGH);  //turn on the load
-    delay(50);
-    acPower.publish();
-    V_underLoad = acPower.rmsVal1;                // voltage under load
-    I_underLoad = acPower.rmsVal2;                // current under load
-    aw.digitalWrite(RELAY_PIN_IO_EXPANDER, LOW);  //turn load back off
 
-    Serial.print(" V before:");
-    Serial.print(gSensors.voltage,1);
-    Serial.print(" Vload:");
-    Serial.print(V_underLoad,1);
 
-    Serial.print(" Current:");
-    Serial.print(gSensors.current,1);
-    Serial.print(" Current Through Resistor:");
-    Serial.print(I_underLoad,1);
 
-    Serial.print(" Impedance before:");
-    Serial.print(gSensors.voltage / gSensors.current,1);
 
-    R_underLoad = V_underLoad / I_underLoad;
-    Serial.print("  Impedance after:");
-    Serial.println(R_underLoad,1);
 
-    if(I_underLoad < MAX_APPLIANCE_AMPS_ALLOWED){
-      // dummy load AND appliance load all too low for some reason.
-      gLatestEvent = test_load_error;
-      gPowerStatus |= ERROR_IN_SYSTEM_FLAG; 
-      Serial.println("Current during impedance test was below expected test current. ");
-      return false;
-    } 
+  if (redCounter > 5) {
+    Serial.print("More than 5 blinks:");
+    Serial.println(redCounter);
+    redCounter = 0;
+  }
 
-    if(update_gAnalysis == UPDATE_gAnalysis_impedance) 
-    {
-      if(R_underLoad > 50){
-        Serial.println("Calculated resistance makes no sense because we should have caught it already");
-      }
-      else{
-        gAnalysis.impedance = R_underLoad;
-        if(R_underLoad < WATCH_IMPEDANCE_LEVEL ){
-          gPowerStatus = CONNECTED_W_NORMAL_FLAG; // this overwrites any other flags. 
-          gLatestEvent = full_cap_confirmed;
-        }
-        else if(R_underLoad < WARNING_IMPEDANCE_LEVEL){
-          gPowerStatus = CONNECTED_W_WATCH_FLAG; // this overwrites any other flags. 
-          gLatestEvent = mrg_cap_confirmed;
 
-        }
-        else if(R_underLoad < UNACCEPTABLE_IMPEDANCE_LEVEL){
-          // NEED SOME TREND MONITORING HERE TO SEE IF IMPEDANCE IS CLIMBING
-          gPowerStatus = CONNECTED_W_WARNING_FLAG; // this overwrites any other flags. 
-          gLatestEvent = mrg_cap_confirmed;
-        }
-        else {
-          disconnectPower();
-          gPowerStatus = CONNECTED_W_WARNING_FLAG; // this overwrites any other flags. 
-          gLatestEvent = mrg_cap_confirmed;
-          
+  // AMBER
+  if (HIGH == aw.digitalRead(AMBER_AFGF_INDICATOR_INPUT_PIN)) {
+    aw.analogWrite(AMBER_LED_PIN, LED_DIM_LEVEL);  //amber on, turn on LED
+    if (false == PrevAmberState) {
+      PrevAmberState = true;
 
-        }
-      }
-      
+      amberCounter++;
+      lastAmberTick = millis();
     }
-    return R_underLoad;
-  }
-}
-
-void GFCI_AFCI_task(void)
-{
-  static bool PrevGFCIState = false;
-  static bool PrevAFCIState = false;
-  static long long lastTick = millis();
-  static uint8_t counter = 0;
- /* if GFCI Blinks at all it is tripped.
-    Only trip once need to power off to reset */
-  if(HIGH == aw.digitalRead(GF_RECEPTACLE_SENSED_LED_PIN))
-  {
-    if(false == PrevGFCIState)
-    {
-       PrevGFCIState = true;
-       Serial.println("GFCI trip");
-       gSensors.gfciTrip = true;
-    }
-  }
-  else if(false == gSensors.gfciTrip)
-  {
-    PrevGFCIState = false;
+  } else {
+    PrevAmberState = false;
+    aw.analogWrite(AMBER_LED_PIN, 0);  // amber not on set LED off and Set previous state false
   }
 
-  if(HIGH == aw.digitalRead(AF_RECEPTACLE_SENSED_LED_PIN))
+  if (millis() > (lastAmberTick + 700))  //this belongs in SystemLogging but the millis count is important to address the solid-on condition. Fix so it is rollover safe http://www.gammon.com.au/millis
   {
-    if(false == PrevAFCIState)
-    {
-       PrevAFCIState = true;
 
-       counter++;
-       lastTick = millis();
+    switch (amberCounter) {
+      case 0:
+        break;
+      case 1:  //solid on but this happens at 700ms is that ok?
+       
+          gLatestEvent = trp_gfci_load_gf;
+          gPowerStatus = DISCONNECTED_BY_AFGF;
+          Serial.println("GFCI Trip (amber on > 700 mS sec");
+        
+        // being on less than 2 seconds happens at boot, and when human is pressing reset button, so it is ignored
+        break;
 
-    }
-  }
-  else
-  {
-    PrevAFCIState = false;
-    
-  }
-  if(millis() > (lastTick + 700))
-    {
-      if(counter>0)
-      { 
-      
-        Serial.print("AFCI trip :");
-        Serial.print(counter);
-        Serial.println(" Blinks");
-        gSensors.afciBlinks = counter;
-        counter = 0;
-      }
+      case 2:
+        gLatestEvent = trp_series_arc;
+        gPowerStatus = DISCONNECTED_BY_AFGF;
+        break;
+
+      case 3:
+        gLatestEvent = trp_parallel_arc;
+        gPowerStatus = DISCONNECTED_BY_AFGF;
+        break;
+        break;
+      case 4:
+        gLatestEvent = trp_overvoltage;
+        gPowerStatus = DISCONNECTED_BY_AFGF;
+        break;
+      case 5:
+        gLatestEvent = trp_af_slf_tst_fail;
+        gPowerStatus = DISCONNECTED_BY_AFGF;
+        break;
+      default:
+        Serial.println("more than 5 blinks from AFGF Amber detected");
+        break;
     }
 
 
- 
 
+    if (amberCounter > 0) {
+      Serial.print("Amber blinks:");
+      Serial.println(amberCounter);
+      gSensors.afciBlinks = amberCounter;
+      amberCounter = 0;
+    }
+  }
 }

@@ -5,9 +5,9 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SH110X.h>
-//#include <vector>
-//#include <CSV_Parser.h> // Install CSV Parser Library (present in Arduino IDE library manager)
-//using namespace std;  //jamie commented this. Why is it here?
+
+
+using namespace std;  //jamie commented this. Why is it here?
 
 Adafruit_SH1107 display = Adafruit_SH1107(64, 128, &Wire);
 

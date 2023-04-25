@@ -7,8 +7,8 @@
 #define RED_LED_PIN 8
 #define AMBER_LED_PIN 9
 #define GREEN_LED_PIN 10
-#define AF_RECEPTACLE_SENSED_LED_PIN 0
-#define GF_RECEPTACLE_SENSED_LED_PIN 1
+#define AMBER_AFGF_INDICATOR_INPUT_PIN 0
+#define RED_AFGF_INDICATOR_INPUT_PIN 1
 #define GFI_TRIP_RELAY_PIN 12
 #define TEST_LOAD_RELAY_PIN 13
 #define WHITE_ALARM_LED_PIN 2
@@ -23,11 +23,11 @@ void initLEDs() {
   aw.pinMode(RED_LED_PIN, AW9523_LED_MODE);
   aw.pinMode(AMBER_LED_PIN, AW9523_LED_MODE);
   aw.pinMode(GREEN_LED_PIN, AW9523_LED_MODE);
-  aw.pinMode(GFI_TRIP_RELAY_PIN, OUTPUT);  //this should be the LED current drive version
+  aw.pinMode(GFI_TRIP_RELAY_PIN, OUTPUT);  
   aw.pinMode(TEST_LOAD_RELAY_PIN, OUTPUT);
   aw.pinMode(WHITE_ALARM_LED_PIN, OUTPUT);
-  aw.pinMode(AF_RECEPTACLE_SENSED_LED_PIN, INPUT);
-  aw.pinMode(GF_RECEPTACLE_SENSED_LED_PIN, INPUT);
+  aw.pinMode(AMBER_AFGF_INDICATOR_INPUT_PIN, INPUT);
+  aw.pinMode(RED_AFGF_INDICATOR_INPUT_PIN, INPUT);
 
 
   aw.analogWrite(RED_LED_PIN, 0);
@@ -61,27 +61,32 @@ void blinkpattern_task() {     //SCHEDULED TO RUN EVERY 100 MS
       if (redTick >= error_led_table[gLatestEvent].red.onTime) 
       {
         aw.analogWrite(RED_LED_PIN, 0);
+        Serial.println("R=false");
         redTick = 0;
         redState = false;
       }
       else
         aw.analogWrite(RED_LED_PIN, LED_DIM_LEVEL);
+        Serial.println("R1=DIMLVL");
     } 
     else 
     {
       if (redTick >= error_led_table[gLatestEvent].red.offTime) 
       {
         aw.analogWrite(RED_LED_PIN, LED_DIM_LEVEL);
+        Serial.println("R2=true");
         redTick = 0;
         redState = true;
       }
       else
         aw.analogWrite(RED_LED_PIN, 0);
+        Serial.println("R3=0");
     }
   }
   else
   {
     aw.analogWrite(RED_LED_PIN, 0);
+    //Serial.println("R4=0");
   }
 
   //Amber LED 
@@ -92,27 +97,32 @@ void blinkpattern_task() {     //SCHEDULED TO RUN EVERY 100 MS
       if (amberTick >= error_led_table[gLatestEvent].amber.onTime) 
       {
         aw.analogWrite(AMBER_LED_PIN, 0);
+        Serial.println("A1=0");
         amberTick = 0;
         amberState = false;
       }
       else
         aw.analogWrite(AMBER_LED_PIN, LED_DIM_LEVEL);
+        Serial.println("A2=DIMLVL");
     } 
     else 
     {
       if (amberTick >= error_led_table[gLatestEvent].amber.offTime) 
       {
         aw.analogWrite(AMBER_LED_PIN, LED_DIM_LEVEL);
+        Serial.println("A3=DIMLVL");
         amberTick = 0;
         amberState = true;
       }
       else
         aw.analogWrite(AMBER_LED_PIN, 0);
+        Serial.println("A4=0");
     }
   }
   else
   {
     aw.analogWrite(AMBER_LED_PIN, 0);
+    //Serial.println("A5=0");
   }
 
     //Green LED 
@@ -123,29 +133,34 @@ void blinkpattern_task() {     //SCHEDULED TO RUN EVERY 100 MS
       if (greenTick >= error_led_table[gLatestEvent].green.onTime) 
       {
         aw.analogWrite(GREEN_LED_PIN, 0);
+        Serial.println("G1=0");
         greenTick = 0;
         greenState = false;
         
       }
       else
         aw.analogWrite(GREEN_LED_PIN, LED_DIM_LEVEL);
+        Serial.println("G2=DIMLVL");
     } 
     else 
     {
       if (greenTick >= error_led_table[gLatestEvent].green.offTime) 
       {
         aw.analogWrite(GREEN_LED_PIN, LED_DIM_LEVEL);
+        Serial.println("G3=DIMLVL");
         greenTick = 0;
         greenState = true;
         
       }
       else
         aw.analogWrite(GREEN_LED_PIN, 0);
+        Serial.println("G4=0");
     }
   }
   else
   {
         aw.analogWrite(GREEN_LED_PIN, 0);
+        //Serial.println("G5=0");
   }
 
 

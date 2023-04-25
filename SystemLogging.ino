@@ -1,13 +1,16 @@
 /*
 *     DataLogging.ino
-*    File to handle all Datalogging 
+*    File to handle all Datalogging, Serial monitor, speech and internet telemetry 
 */
 
+#include <SD.h>
 
 #define VREF 3300       //VREF 3.3V
 #define MAX_COUNT 1024  //10 Bit 2^10
 
-
+#define INCLUDE_TIMESTAMP 0X01
+#define INCLUDE_SENSORS 0X02
+#define INCLUDE_STATUS 0X04
 
 
 /*
@@ -46,10 +49,83 @@ void stopLogging() {
   Serial.println("Stop Logging");
 }
 
-#define INCLUDE_TIMESTAMP 0X01
-#define INCLUDE_SENSORS 0X02
-#define INCLUDE_STATUS 0X04
 
+
+
+void processEvent(error_conditions_t error){
+  String dataString = error_message_table[error].dashboardMsg;
+  dataString +=  "\t";
+  dataString +=  error_message_table[error].detailedErrorMsg;
+  dataString +=  "\t";
+  dataString +=  error_message_table[error].extendedErrorMsg;
+  dataString +=  "\t";
+  writeEventLog(dataString);
+
+  // When all calls to writeEventLog are eliminated, than it can be merged into this function
+  
+
+//play sound file
+ // File soundFile = SD.open(error_message_table[error].soundFile);
+  // AudioZero.play(soundFile);
+   //AudioZero.end();
+
+
+}
+
+
+void writeEventLog(String messageText) {
+  
+  
+  
+  String dataString = "";
+
+  dataString += String(now.month());
+  dataString += "/";
+  dataString += String(now.day());
+  dataString += "/";
+  dataString += String(now.year());
+  dataString += " ";
+  dataString += String(now.hour());
+  dataString += ":";
+  dataString += String(now.minute());
+  dataString += ":";
+  dataString += String(now.second());
+  dataString += "  Event: ";
+  dataString += String(gLatestEvent);
+  dataString += "  Status: ";
+  dataString += String(gPowerStatus);
+  if (messageText != "") {
+    dataString += " ";
+    dataString += messageText;
+  }
+
+
+  Serial.println(dataString);
+  File eventfile = SD.open("eventLog.csv", FILE_WRITE);
+  if (eventfile) {
+    eventfile.println(dataString);
+  } else {
+    Serial.println("unable open eventLog.csv");
+    // ? should this just return here, or attempt to open the datalog file anyway? There is more SD card recovery stuff in SystemLogging.ino
+  }
+  if (dataloggingEnabled) {
+    String datalogFileName = "";
+    datalogFileName += String(now.month());
+    datalogFileName += String(now.day());
+    datalogFileName += String(now.year());
+    datalogFileName += ".CSV";
+
+    File dataFile = SD.open(datalogFileName, FILE_WRITE);
+    // if the file is available, write to it:
+    if (dataFile) {
+      dataFile.println(dataString);
+      dataFile.close();
+    } else {
+      Serial.print(datalogFileName);
+      Serial.println(" could not be opened");
+    }
+  }
+}
 
 
 void writeTrace(String messageText, int flags)
@@ -154,12 +230,7 @@ void data_logging(void) {
     initSDCard();
   }
 
-  // automatically process a change in event
-  if(gLatestEvent != gPreviousEvent){
-    gPreviousEvent = gLatestEvent;
-    ++event_count[gLatestEvent];
-    //processEvent(gLatestEvent);
-  }
+
 
   if (false == dataloggingEnabled) {
     return;
