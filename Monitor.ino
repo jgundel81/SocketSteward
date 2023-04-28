@@ -192,7 +192,7 @@ void GFCI_AFCI_task(void) {
        
           gLatestEvent = trp_gfci_load_gf;
           gPowerStatus = DISCONNECTED_BY_AFGF;
-          Serial.println("GFCI Trip (amber on > 700 mS sec");
+          Serial.println("");
         
         // being on less than 2 seconds happens at boot, and when human is pressing reset button, so it is ignored
         break;
