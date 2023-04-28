@@ -60,7 +60,7 @@ error_messages_t error_message_table[NUM_OF_ERRORS] = {
   {" load_prsnt_at_pwr   ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", "TBD.wav",""},//load_prsnt_at_pwr
   {" ext_volt_dips_dect  ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", "TBD.wav",""},//ext_volt_dips_dect
   {" Initializing System ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", "TBD.wav",""},//boot_up  
-  {" SD Card Error       ", "    SD Card Error\r\nMake Sure SD Card\r\nInserted & Reset \r\n", "TBD.wav",""},//No SD Card  
+  {" SD Card Error       ", "    SD Card Error\r\nMake Sure SD Card\r\nInserted & Reset \r\n", "TBD.wav","Card failed, or not present"},//No SD Card  
   {" Test Load Error     ", "    Test resistor\r\ncurrent too low  \r\nand needs repair \r\n", "TBD.wav",""},//No SD Card  
   {" Unknown Trip        ", "    Line 1       \r\n    Line 2       \r\n    Line 3       \r\n", "TBD.wav","Volts < 10 when previously connected. Waiting for AFGF blink codes."},//unknown_trip,
   {" Sensor Error        ", "  SENSOR FAILURE \r\n CONTACT SUPPORT \r\n SYSTEM IMPAIRED \r\n", "TBD.wav","No load-side voltage detected, yet current > 1 amp. This may be a voltage sensor failure or disconnect."},//sensor_error

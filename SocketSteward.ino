@@ -161,8 +161,8 @@ void initSDCard(void) {
   // see if the card is present and can be initialized:
   if (! SD.begin(chipSelect))
   {
-    writeEventLog("Card failed, or not present");
-
+    
+    glatestEvent = sdcard_error
   }
   else
   {

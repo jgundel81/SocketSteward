@@ -93,17 +93,14 @@ void control_task(void) {
     if (gPowerStatus == INITIALIZING) {  // no volts but just booted up. Might have been previously tripped and then power cycled.
       gLatestEvent = trp_no_indication;
       gPowerStatus = DISCONNECTED_AT_POWER_UP;
-      writeEventLog("Volts < 10 while initializing. Assumed AFGF circuit was tripped before and needs to be reset. ");
     } else if (gPowerStatus == DISCONNECTED_UNKNOWN) {  // no volts, if still no message from AFGF blinking LEDS but those leds could take 3 seconds to read the longest blink sequence.
       if (0 == (tick1++ % 30)) {
         tick1 = 0;
         gPowerStatus = DISCONNECTED_PENDING_AFGF;
-        writeEventLog("vOLTS < 10 (outlet disconnected) for 3 seconds with no AFGF codes. This could be a hardware failure.");
       }
     } else if (ANY_CONNECTED_STATUS(gPowerStatus)) {  //appliance power was connected, but now AC volts are lost? Perhaps this test occurred while AFGF blink are still being interpreted.
       gLatestEvent = unknown_trip;
       gPowerStatus = DISCONNECTED_UNKNOWN;
-      writeEventLog("vOLTS < 10 when previously connected. Waiting for AFGF blink codes.");
     } else if (ANY_DISCONNECTED_STATUS(gPowerStatus)) {
       // These are all the other disconnected conditions and volts still say it is disconnected
       if (gSensors.current > 1) {
@@ -117,7 +114,6 @@ void control_task(void) {
   } else if (gSensors.voltage < 90) {  // This could be a serious voltage dip, need to add code for voltage dip analysis
     gLatestEvent = low_voltage;
     gPowerStatus = CONNECTED_W_WARNING_FLAG;
-    writeEventLog("Voltage dipped below 90, suggesting high resistance ");
 
 
   } else if (gSensors.voltage < 105) {  // this can be a typical inrush situation with compressor loads in the home
