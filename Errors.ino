@@ -42,31 +42,31 @@ u_int32_t event_count[NUM_OF_ERRORS];
 // Make sure order matches enums above
 error_messages_t error_message_table[NUM_OF_ERRORS] = {
 /*. Splash Screen Msg            Detailed Message to be displayed on detailed message screen.  Sound        Message to log*/
-  {" Power is connected  ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "beep.wav",""}, //no_error
-  {" Thermal Runaway     ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TR.wav",""},//thermal_runaway,
-  {" Low Voltage         ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav","Voltage dipped below 90, suggesting high resistance."},//low_voltage,
-  {" Ground Fault        ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "GF.wav",""},//ground_fault,
-  {" Arc Fault           ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav",""},//arc_fault,
-  {" trp_no_indication   ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav","Volts < 10 while initializing. Assumed AFGF circuit was tripped before and needs to be reset."},//trp_no_indication
-  {" trp_gfci_load_gf    ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav","GFCI Trip (amber on > 700 mS sec"},//trp_gfci_load_gf
-  {" trp_series_arc      ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav",""},//trp_series_arc
-  {" trp_parallel_arc    ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav",""},//trp_parallel_arc
-  {" trp_overvoltage     ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav",""},//trp_overvoltage
-  {" trp_af_slf_tst_fail ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav",""},//trp_af_slf_tst_fail
-  {" trp_gfci_sf_tst_fail", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav",""},//trp_gfci_slf_tst_fail
-  {" hot_attch_plug      ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav",""},//hot_attch_plug
-  {" hot_receptacle      ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav",""},//hot_receptacle
-  {" no_load_at_pwr_up   ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav",""},//no_load_at_pwr_up
-  {" full_cap_confirmed  ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav",""},//full_cap_confirmed
-  {" mrg_cap_confirmed   ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav",""},//mrg_cap_confirmed
-  {" load_prsnt_at_pwr   ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav",""},//load_prsnt_at_pwr
-  {" ext_volt_dips_dect  ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav",""},//ext_volt_dips_dect
-  {" Initializing System ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav",""},//boot_up  
-  {" SD Card Error       ", "    SD Card Error", "Make Sure SD Card", "Inserted & Reset ", "", "TBD.wav","Card failed, or not present"},//No SD Card  
-  {" Test Load Error     ", "    Test resistor", "current too low  ", "and needs repair ", "", "TBD.wav",""},//No SD Card  
-  {" Unknown Trip        ", "    Line 1       ", "    Line 2       ", "    Line 3       ", "", "TBD.wav","Volts < 10 when previously connected. Waiting for AFGF blink codes."},//unknown_trip,
-  {" Sensor Error        ", "  SENSOR FAILURE ", " CONTACT SUPPORT ", " SYSTEM IMPAIRED ", "", "TBD.wav","No load-side voltage detected, yet current > 1 amp. This may be a voltage sensor failure or disconnect."},//sensor_error
-  {" Clock Batt Warning  ", "Logging timestamp", "time wrong. Check", "CR1220 battery.  ", "", "TBD.wav",""},//clock bat
+  {" Power is connected  ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "beep.wav",""}, //no_error
+  {" Thermal Runaway     ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TR.wav",""},//thermal_runaway,
+  {" Low Voltage         ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav","Voltage dipped below 90, suggesting high resistance."},//low_voltage,
+  {" Ground Fault        ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "GF.wav",""},//ground_fault,
+  {" Arc Fault           ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav",""},//arc_fault,
+  {" trp_no_indication   ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav","Volts < 10 while initializing. Assumed AFGF circuit was tripped before and needs to be reset."},//trp_no_indication
+  {" trp_gfci_load_gf    ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav","GFCI Trip (amber on > 700 mS sec"},//trp_gfci_load_gf
+  {" trp_series_arc      ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav",""},//trp_series_arc
+  {" trp_parallel_arc    ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav",""},//trp_parallel_arc
+  {" trp_overvoltage     ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav",""},//trp_overvoltage
+  {" trp_af_slf_tst_fail ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav",""},//trp_af_slf_tst_fail
+  {" trp_gfci_sf_tst_fail", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav",""},//trp_gfci_slf_tst_fail
+  {" hot_attch_plug      ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav",""},//hot_attch_plug
+  {" hot_receptacle      ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav",""},//hot_receptacle
+  {" no_load_at_pwr_up   ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav",""},//no_load_at_pwr_up
+  {" full_cap_confirmed  ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav",""},//full_cap_confirmed
+  {" mrg_cap_confirmed   ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav",""},//mrg_cap_confirmed
+  {" load_prsnt_at_pwr   ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav",""},//load_prsnt_at_pwr
+  {" ext_volt_dips_dect  ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav",""},//ext_volt_dips_dect
+  {" Initializing System ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav",""},//boot_up  
+  {" SD Card Error       ", "    SD Card Error", "Make Sure SD Card", "Inserted & Reset ",  "TBD.wav","Card failed, or not present"},//No SD Card  
+  {" Test Load Error     ", "    Test resistor", "current too low  ", "and needs repair ",  "TBD.wav",""},//No SD Card  
+  {" Unknown Trip        ", "    Line 1       ", "    Line 2       ", "    Line 3       ",  "TBD.wav","Volts < 10 when previously connected. Waiting for AFGF blink codes."},//unknown_trip,
+  {" Sensor Error        ", "  SENSOR FAILURE ", " CONTACT SUPPORT ", " SYSTEM IMPAIRED ",  "TBD.wav","No load-side voltage detected, yet current > 1 amp. This may be a voltage sensor failure or disconnect."},//sensor_error
+  {" Clock Batt Warning  ", "Logging timestamp", "time wrong. Check", "CR1220 battery.  ",  "TBD.wav",""},//clock bat
  
 };
 

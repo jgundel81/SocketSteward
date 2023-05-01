@@ -151,26 +151,7 @@ int acVoltADC;  // add "volatile" if ever value is accessed outside the timer IS
 int acCurrADC;
 
 
-/*
-*   SD Card Initialization Function 
-*
-*/
-void initSDCard(void) {
-  Serial.println(" Initializing SD card");
 
-  // see if the card is present and can be initialized:
-  if (! SD.begin(chipSelect))
-  {
-    
-    glatestEvent = sdcard_error
-  }
-  else
-  {
-    gSDCardInited = true;
-    Serial.println("Card initialized.");
-  }
-  
-}
 
 
 /*

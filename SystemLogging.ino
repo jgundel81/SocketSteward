@@ -12,6 +12,27 @@
 #define INCLUDE_SENSORS 0X02
 #define INCLUDE_STATUS 0X04
 
+/*
+*   SD Card Initialization Function 
+*
+*/
+void initSDCard(void) {
+  Serial.println(" Initializing SD card");
+
+  // see if the card is present and can be initialized:
+  if (! SD.begin(chipSelect))
+  {
+    
+    gLatestEvent = sdcard_error;
+  }
+  else
+  {
+    gSDCardInited = true;
+    Serial.println("Card initialized.");
+  }
+}
+
+
 
 /*
 *   Function to set loging flag
